@@ -4,11 +4,8 @@ execute.py 리팩터링 안전망 테스트.
 """
 
 import json
-import os
-import subprocess
 import sys
-import textwrap
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -29,12 +26,12 @@ def tmp_project(tmp_path):
     phases_dir.mkdir()
 
     claude_md = tmp_path / "CLAUDE.md"
-    claude_md.write_text("# Rules\n- rule one\n- rule two")
+    claude_md.write_text("# Rules\n- rule one\n- rule two", encoding="utf-8")
 
     docs_dir = tmp_path / "docs"
     docs_dir.mkdir()
-    (docs_dir / "arch.md").write_text("# Architecture\nSome content")
-    (docs_dir / "guide.md").write_text("# Guide\nAnother doc")
+    (docs_dir / "arch.md").write_text("# Architecture\nSome content", encoding="utf-8")
+    (docs_dir / "guide.md").write_text("# Guide\nAnother doc", encoding="utf-8")
 
     return tmp_path
 
@@ -54,8 +51,8 @@ def phase_dir(tmp_project):
             {"step": 2, "name": "ui", "status": "pending"},
         ],
     }
-    (d / "index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False))
-    (d / "step2.md").write_text("# Step 2: UI\n\nUI를 구현하세요.")
+    (d / "index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
+    (d / "step2.md").write_text("# Step 2: UI\n\nUI를 구현하세요.", encoding="utf-8")
 
     return d
 
@@ -70,7 +67,7 @@ def top_index(tmp_project):
         ]
     }
     p = tmp_project / "phases" / "index.json"
-    p.write_text(json.dumps(top, indent=2))
+    p.write_text(json.dumps(top, indent=2), encoding="utf-8")
     return p
 
 
@@ -126,14 +123,14 @@ class TestJsonHelpers:
     def test_save_ensures_ascii_false(self, tmp_path):
         p = tmp_path / "test.json"
         ex.StepExecutor._write_json(p, {"한글": "테스트"})
-        raw = p.read_text()
+        raw = p.read_text(encoding="utf-8")
         assert "한글" in raw
         assert "\\u" not in raw
 
     def test_save_indented(self, tmp_path):
         p = tmp_path / "test.json"
         ex.StepExecutor._write_json(p, {"a": 1})
-        raw = p.read_text()
+        raw = p.read_text(encoding="utf-8")
         assert "\n" in raw
 
     def test_load_nonexistent_raises(self, tmp_path):
@@ -187,7 +184,7 @@ class TestLoadGuardrails:
             phases_dir = tmp_path / "phases" / "dummy"
             phases_dir.mkdir(parents=True)
             idx = {"project": "T", "phase": "t", "steps": []}
-            (phases_dir / "index.json").write_text(json.dumps(idx))
+            (phases_dir / "index.json").write_text(json.dumps(idx), encoding="utf-8")
             inst = ex.StepExecutor.__new__(ex.StepExecutor)
             result = inst._load_guardrails()
         assert result == ""
@@ -199,18 +196,18 @@ class TestLoadGuardrails:
 
 class TestBuildStepContext:
     def test_includes_completed_with_summary(self, phase_dir):
-        index = json.loads((phase_dir / "index.json").read_text())
+        index = json.loads((phase_dir / "index.json").read_text(encoding="utf-8"))
         result = ex.StepExecutor._build_step_context(index)
         assert "Step 0 (setup): 프로젝트 초기화 완료" in result
         assert "Step 1 (core): 핵심 로직 구현" in result
 
     def test_excludes_pending(self, phase_dir):
-        index = json.loads((phase_dir / "index.json").read_text())
+        index = json.loads((phase_dir / "index.json").read_text(encoding="utf-8"))
         result = ex.StepExecutor._build_step_context(index)
         assert "ui" not in result
 
     def test_excludes_completed_without_summary(self, phase_dir):
-        index = json.loads((phase_dir / "index.json").read_text())
+        index = json.loads((phase_dir / "index.json").read_text(encoding="utf-8"))
         del index["steps"][0]["summary"]
         result = ex.StepExecutor._build_step_context(index)
         assert "setup" not in result
@@ -222,7 +219,7 @@ class TestBuildStepContext:
         assert result == ""
 
     def test_has_header(self, phase_dir):
-        index = json.loads((phase_dir / "index.json").read_text())
+        index = json.loads((phase_dir / "index.json").read_text(encoding="utf-8"))
         result = ex.StepExecutor._build_step_context(index)
         assert result.startswith("## 이전 Step 산출물")
 
@@ -524,7 +521,7 @@ class TestCheckBlockers:
         d = tmp_project / "phases" / "test-phase"
         d.mkdir(exist_ok=True)
         index = {"project": "T", "phase": "test", "steps": steps}
-        (d / "index.json").write_text(json.dumps(index))
+        (d / "index.json").write_text(json.dumps(index), encoding="utf-8")
 
         with patch.object(ex, "ROOT", tmp_project):
             inst = ex.StepExecutor.__new__(ex.StepExecutor)
@@ -557,3 +554,335 @@ class TestCheckBlockers:
         with pytest.raises(SystemExit) as exc_info:
             inst._check_blockers()
         assert exc_info.value.code == 2
+
+
+# ---------------------------------------------------------------------------
+# F-1. _execute_single_step 통합 테스트
+# ---------------------------------------------------------------------------
+
+class _FakeClaude:
+    """`_invoke_claude` mock — 호출 시 index.json의 특정 step status를 변경한다.
+
+    side_effects: 호출 N회마다의 (status, message) 튜플 리스트.
+    """
+    def __init__(self, executor, step_num: int, side_effects: list):
+        self.executor = executor
+        self.step_num = step_num
+        self.side_effects = list(side_effects)
+        self.calls: list = []
+
+    def __call__(self, step: dict, preamble: str):
+        self.calls.append({"step": step["step"], "preamble": preamble})
+        if not self.side_effects:
+            return {"exitCode": 0}
+        status, message = self.side_effects.pop(0)
+        index = ex.StepExecutor._read_json(self.executor._index_file)
+        for s in index["steps"]:
+            if s["step"] == self.step_num:
+                s["status"] = status
+                if status == "completed":
+                    s["summary"] = message or "ok"
+                elif status == "error":
+                    s["error_message"] = message
+                elif status == "blocked":
+                    s["blocked_reason"] = message
+        ex.StepExecutor._write_json(self.executor._index_file, index)
+        return {"exitCode": 0}
+
+
+class TestExecuteSingleStepIntegration:
+    def _prepare(self, executor):
+        """git 호출 무력화 + step.md 보장."""
+        executor._run_git = lambda *args: MagicMock(returncode=1, stdout="", stderr="")
+        executor._commit_step = lambda *args: None
+        (executor._phase_dir / "step2.md").write_text("dummy", encoding="utf-8")
+
+    def test_completed_on_first_try(self, executor):
+        self._prepare(executor)
+        fake = _FakeClaude(executor, step_num=2, side_effects=[("completed", "산출물 요약")])
+        executor._invoke_claude = fake
+        step = {"step": 2, "name": "ui"}
+        result = executor._execute_single_step(step, "GUARD")
+        assert result is True
+        assert len(fake.calls) == 1
+        assert "이전 시도 실패" not in fake.calls[0]["preamble"]
+
+    def test_retry_then_success(self, executor):
+        self._prepare(executor)
+        fake = _FakeClaude(executor, step_num=2, side_effects=[
+            ("error", "타입 에러"),
+            ("completed", "성공"),
+        ])
+        executor._invoke_claude = fake
+        (executor._phase_dir / "step2-output.json").write_text(
+            json.dumps({"step": 2, "stderr": "TypeError: foo is not defined", "stdout": ""}),
+            encoding="utf-8",
+        )
+        step = {"step": 2, "name": "ui"}
+        result = executor._execute_single_step(step, "GUARD")
+        assert result is True
+        assert len(fake.calls) == 2
+        assert "이전 시도 실패" in fake.calls[1]["preamble"]
+        assert "TypeError" in fake.calls[1]["preamble"]
+
+    def test_max_retries_then_error(self, executor):
+        self._prepare(executor)
+        fake = _FakeClaude(executor, step_num=2, side_effects=[
+            ("error", "fail 1"), ("error", "fail 2"), ("error", "fail 3"),
+        ])
+        executor._invoke_claude = fake
+        (executor._phase_dir / "step2-output.json").write_text(
+            json.dumps({"step": 2, "stderr": "boom", "stdout": ""}), encoding="utf-8",
+        )
+        step = {"step": 2, "name": "ui"}
+        with pytest.raises(SystemExit) as exc_info:
+            executor._execute_single_step(step, "GUARD")
+        assert exc_info.value.code == 1
+        idx = ex.StepExecutor._read_json(executor._index_file)
+        s = next(s for s in idx["steps"] if s["step"] == 2)
+        assert s["status"] == "error"
+        assert "3회 시도 후 실패" in s["error_message"]
+
+    def test_blocked_immediately_exits(self, executor):
+        self._prepare(executor)
+        fake = _FakeClaude(executor, step_num=2, side_effects=[("blocked", "API 키 필요")])
+        executor._invoke_claude = fake
+        step = {"step": 2, "name": "ui"}
+        with pytest.raises(SystemExit) as exc_info:
+            executor._execute_single_step(step, "GUARD")
+        assert exc_info.value.code == 2
+        assert len(fake.calls) == 1
+
+
+# ---------------------------------------------------------------------------
+# F-2. _execute_all_steps 루프
+# ---------------------------------------------------------------------------
+
+class TestExecuteAllStepsLoop:
+    def test_skips_completed(self, executor):
+        executor._run_git = lambda *args: MagicMock(returncode=1)
+        executor._commit_step = lambda *args: None
+        (executor._phase_dir / "step2.md").write_text("dummy", encoding="utf-8")
+        fake = _FakeClaude(executor, step_num=2, side_effects=[("completed", "done")])
+        executor._invoke_claude = fake
+        executor._execute_all_steps("GUARD")
+        assert len(fake.calls) == 1
+        assert fake.calls[0]["step"] == 2
+
+    def test_started_at_recorded(self, executor):
+        executor._run_git = lambda *args: MagicMock(returncode=1)
+        executor._commit_step = lambda *args: None
+        (executor._phase_dir / "step2.md").write_text("dummy", encoding="utf-8")
+        fake = _FakeClaude(executor, step_num=2, side_effects=[("completed", "done")])
+        executor._invoke_claude = fake
+        executor._execute_all_steps("GUARD")
+        idx = ex.StepExecutor._read_json(executor._index_file)
+        s2 = next(s for s in idx["steps"] if s["step"] == 2)
+        assert "started_at" in s2
+
+    def test_all_completed_terminates(self, executor):
+        idx = ex.StepExecutor._read_json(executor._index_file)
+        for s in idx["steps"]:
+            s["status"] = "completed"
+            s.setdefault("summary", "ok")
+        ex.StepExecutor._write_json(executor._index_file, idx)
+        called = {"n": 0}
+
+        def boom(*args, **kwargs):
+            called["n"] += 1
+            raise AssertionError("should not be called")
+
+        executor._invoke_claude = boom
+        executor._execute_all_steps("GUARD")
+        assert called["n"] == 0
+
+
+# ---------------------------------------------------------------------------
+# F-3. HARNESS_MODE / 환경변수 sanitize
+# ---------------------------------------------------------------------------
+
+class TestHarnessModeInjection:
+    def test_harness_mode_env_passed_to_claude(self, executor):
+        env = executor._sanitized_env()
+        assert env["HARNESS_MODE"] == "1"
+
+    def test_api_keys_stripped_from_env(self, executor, monkeypatch):
+        monkeypatch.setenv("GEMINI_API_KEY", "secret-gemini")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "secret-claude")
+        monkeypatch.setenv("YOUTUBE_API_KEY", "secret-yt")
+        monkeypatch.setenv("OTHER_VAR", "ok")
+        env = executor._sanitized_env()
+        assert "GEMINI_API_KEY" not in env
+        assert "ANTHROPIC_API_KEY" not in env
+        assert "YOUTUBE_API_KEY" not in env
+        assert env.get("OTHER_VAR") == "ok"
+        assert env["HARNESS_MODE"] == "1"
+
+    def test_invoke_claude_uses_sanitized_env(self, executor, monkeypatch):
+        monkeypatch.setenv("GEMINI_API_KEY", "secret")
+        (executor._phase_dir / "step2.md").write_text("dummy", encoding="utf-8")
+        mock_result = MagicMock(returncode=0, stdout="{}", stderr="")
+        with patch("subprocess.run", return_value=mock_result) as mock_run:
+            executor._invoke_claude({"step": 2, "name": "ui"}, "preamble")
+        env_passed = mock_run.call_args[1]["env"]
+        assert env_passed["HARNESS_MODE"] == "1"
+        assert "GEMINI_API_KEY" not in env_passed
+
+
+# ---------------------------------------------------------------------------
+# F-4. retry 시 stderr tail 피드백 (A-1)
+# ---------------------------------------------------------------------------
+
+class TestRetryFeedback:
+    def test_read_output_tail_returns_stderr(self, executor):
+        out = executor._phase_dir / "step2-output.json"
+        out.write_text(json.dumps({"stderr": "line1\nline2", "stdout": "ok"}), encoding="utf-8")
+        result = executor._read_output_tail(out)
+        assert "line1\nline2" in result
+
+    def test_read_output_tail_falls_back_to_stdout(self, executor):
+        out = executor._phase_dir / "step2-output.json"
+        out.write_text(json.dumps({"stderr": "", "stdout": "build success"}), encoding="utf-8")
+        result = executor._read_output_tail(out)
+        assert "build success" in result
+
+    def test_tail_truncates_to_max(self, executor):
+        out = executor._phase_dir / "step2-output.json"
+        long_stderr = "x" * 5000
+        out.write_text(json.dumps({"stderr": long_stderr, "stdout": ""}), encoding="utf-8")
+        result = executor._read_output_tail(out)
+        assert "앞부분 생략" in result
+        body = result.split("\n", 1)[1]
+        assert len(body) == ex.StepExecutor.RETRY_TAIL_CHARS
+
+    def test_missing_output_returns_placeholder(self, executor):
+        result = executor._read_output_tail(executor._phase_dir / "step99-output.json")
+        assert result == "(직전 출력 없음)"
+
+
+# ---------------------------------------------------------------------------
+# F-5. dry-run / from-step / step timeout
+# ---------------------------------------------------------------------------
+
+class TestDryRunAndFromStep:
+    def test_dry_run_skips_claude(self, executor, capsys):
+        executor._dry_run = True
+        (executor._phase_dir / "step2.md").write_text("dummy", encoding="utf-8")
+        out = executor._invoke_claude({"step": 2, "name": "ui"}, "PREAMBLE")
+        assert out["dryRun"] is True
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
+
+    def test_from_step_marks_earlier_as_completed(self, executor):
+        executor._from_step = 2
+        executor._apply_from_step_override()
+        idx = ex.StepExecutor._read_json(executor._index_file)
+        assert idx["steps"][0]["status"] == "completed"
+        assert idx["steps"][1]["status"] == "completed"
+
+    def test_step_timeout_default(self, executor):
+        assert executor._step_timeout({"step": 0, "name": "a"}) == 1800
+
+    def test_step_timeout_override(self, executor):
+        assert executor._step_timeout({"step": 0, "name": "a", "timeout_seconds": 3600}) == 3600
+
+
+# ---------------------------------------------------------------------------
+# F-6. _run_build_gate (C-2)
+# ---------------------------------------------------------------------------
+
+class TestBuildGate:
+    def test_skip_when_no_package_json(self, executor, tmp_project, capsys):
+        with patch.object(ex, "ROOT", tmp_project):
+            executor._run_build_gate()
+        captured = capsys.readouterr()
+        assert "skip build gate" in captured.out
+
+    def test_runs_lint_build_test(self, executor, tmp_project, monkeypatch):
+        (tmp_project / "package.json").write_text("{}", encoding="utf-8")
+        calls: list = []
+
+        def fake_run(cmd, **kwargs):
+            calls.append(cmd)
+            return MagicMock(returncode=0)
+
+        monkeypatch.setattr("subprocess.run", fake_run)
+        with patch.object(ex, "ROOT", tmp_project):
+            executor._run_build_gate()
+        assert calls == [["npm", "run", "lint"], ["npm", "run", "build"], ["npm", "run", "test"]]
+
+    def test_failure_exits_1(self, executor, tmp_project, monkeypatch):
+        (tmp_project / "package.json").write_text("{}", encoding="utf-8")
+
+        def fake_run(cmd, **kwargs):
+            return MagicMock(returncode=1)
+
+        monkeypatch.setattr("subprocess.run", fake_run)
+        executor._update_top_index = lambda status: None
+        with patch.object(ex, "ROOT", tmp_project):
+            with pytest.raises(SystemExit) as exc_info:
+                executor._run_build_gate()
+        assert exc_info.value.code == 1
+
+
+# ---------------------------------------------------------------------------
+# F-7. dry-run 가드 — git/index 변경 0건 보장 (검증 8-B 사후 fix)
+# ---------------------------------------------------------------------------
+
+class TestDryRunGuards:
+    def test_dry_run_run_skips_checkout_and_finalize(self, executor):
+        """dry-run에서 run() 호출 시 _checkout_branch, _commit_step, _finalize 모두 미호출."""
+        executor._dry_run = True
+        called: dict = {"checkout": 0, "commit": 0, "finalize": 0, "build_gate": 0,
+                        "check_tree": 0, "ensure_created": 0, "apply_from_step": 0}
+
+        def track(key):
+            def inner(*args, **kwargs):
+                called[key] += 1
+            return inner
+
+        executor._checkout_branch = track("checkout")
+        executor._commit_step = track("commit")
+        executor._finalize = track("finalize")
+        executor._run_build_gate = track("build_gate")
+        executor._check_working_tree = track("check_tree")
+        executor._ensure_created_at = track("ensure_created")
+        executor._apply_from_step_override = track("apply_from_step")
+        executor._check_claude_cli = lambda: None
+        executor._check_blockers = lambda: None
+        (executor._phase_dir / "step2.md").write_text("dummy", encoding="utf-8")
+
+        executor.run()
+
+        assert called["checkout"] == 0, "dry-run에서 _checkout_branch가 호출되면 안 됨"
+        assert called["commit"] == 0, "dry-run에서 _commit_step이 호출되면 안 됨"
+        assert called["finalize"] == 0, "dry-run에서 _finalize가 호출되면 안 됨"
+        assert called["build_gate"] == 0
+        assert called["check_tree"] == 0, "dry-run에선 dirty 5초 대기 skip"
+        assert called["ensure_created"] == 0, "dry-run에선 index.json created_at 기록 skip"
+        assert called["apply_from_step"] == 0
+
+    def test_dry_run_does_not_mutate_index(self, executor):
+        """dry-run 실행 전후로 phases/{phase}/index.json이 동일해야 한다."""
+        executor._dry_run = True
+        executor._check_claude_cli = lambda: None
+        executor._check_blockers = lambda: None
+        (executor._phase_dir / "step2.md").write_text("dummy", encoding="utf-8")
+
+        before = executor._index_file.read_text(encoding="utf-8")
+        executor.run()
+        after = executor._index_file.read_text(encoding="utf-8")
+        assert before == after, "dry-run이 index.json을 변경했음"
+
+    def test_dry_run_outputs_each_pending_step(self, executor, capsys):
+        """dry-run은 pending step의 preamble을 한 번씩 출력한다."""
+        executor._dry_run = True
+        executor._check_claude_cli = lambda: None
+        executor._check_blockers = lambda: None
+        (executor._phase_dir / "step2.md").write_text("UI 작업", encoding="utf-8")
+
+        executor.run()
+        captured = capsys.readouterr()
+        # fixture에 step 2만 pending → 1회 DRY RUN 출력 + 종료 메시지
+        assert captured.out.count("DRY RUN preamble") == 1
+        assert "어떤 부작용도 없습니다" in captured.out
