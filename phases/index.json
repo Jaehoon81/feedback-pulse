@@ -1,0 +1,10 @@
+{
+  "phases": [
+    { "dir": "0-foundation", "status": "pending" },
+    { "dir": "1-youtube-service", "status": "pending" },
+    { "dir": "2-analyzer", "status": "pending" },
+    { "dir": "3-api-storage", "status": "pending" },
+    { "dir": "4-ui-components", "status": "pending" },
+    { "dir": "5-pages-e2e", "status": "pending" }
+  ]
+}
