@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npm run lint 2>&1 && npm run build 2>&1 && npm run test 2>&1"
+            "command": "bash -c \"if [ \\\"$HARNESS_MODE\\\" = \\\"1\\\" ]; then echo 'skip: harness sub-session (lint/build/test runs at phase finalize)'; elif [ -f package.json ]; then npm run lint && npm run build && npm run test; else echo 'skip: no package.json yet'; fi\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -qE 'rm\\s+-rf|git\\s+push\\s+--force|git\\s+reset\\s+--hard|DROP\\s+TABLE'; then echo 'BLOCKED: 위험한 명령어가 감지되었습니다.' >&2; exit 1; fi"
+            "command": "python scripts/check_dangerous_command.py"
           }
         ]
       }
