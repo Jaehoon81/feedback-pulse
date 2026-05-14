@@ -1,0 +1,74 @@
+# feedback-pulse
+
+YouTube 영상 URL만 붙여넣으면 댓글을 수집·분석해 시청자 반응 리포트(강점·개선점·감성·주제·주목 댓글)를 1분 안에 만들어 주는 1인 크리에이터용 도구.
+
+로그인 없음 · 별도 백엔드 서버 없음 · localStorage에 분석 히스토리 보관.
+
+## 기술 스택
+
+- **Frontend**: Next.js 15 (App Router) · TypeScript strict · Tailwind CSS · Recharts
+- **분석**: Google Gemini API (`@google/genai`, `gemini-2.5-pro`) — 무료 티어 기본 채택 (ADR-011)
+- **데이터 수집**: YouTube Data API v3 (fetch 직접 호출)
+- **테스트**: Vitest + @testing-library + Playwright MCP
+- **배포**: Vercel Hobby (Free) — Function `maxDuration` 60초
+
+## 빠른 시작
+
+### 1. 의존성 설치
+
+```bash
+npm install
+```
+
+### 2. 환경 변수 설정
+
+```bash
+cp .env.example .env.local
+```
+
+`.env.local`에 두 API 키를 채운다:
+
+- `YOUTUBE_API_KEY` — [Google Cloud Console](https://console.cloud.google.com/apis/credentials)에서 발급. `YouTube Data API v3` 활성화 필요. 일일 쿼터 10,000 units (무료).
+- `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/app/apikey)에서 발급. 신용카드 불필요, 무료 티어 100 RPD / 5 RPM.
+
+### 3. 개발 서버 실행
+
+```bash
+npm run dev
+```
+
+브라우저에서 [http://localhost:3000](http://localhost:3000) 접속.
+
+## 명령어
+
+| 명령어 | 설명 |
+|---|---|
+| `npm run dev` | 개발 서버 시작 |
+| `npm run build` | 프로덕션 빌드 |
+| `npm run lint` | ESLint 검사 |
+| `npm run test` | Vitest 단위/통합 테스트 |
+| `python scripts/execute.py <phase-dir>` | 하네스 Phase 실행 (자동 자가 교정 + 커밋) |
+
+> **Note**: 본 프로젝트는 Python 3.11+ 기준 `python` 명령으로 통일. macOS/Linux의 구형 시스템에서 `python`이 Python 2를 가리킨다면 `python3`으로 교체하세요.
+
+## 하네스 워크플로우
+
+본 프로젝트는 Phase 단위 step 명세로 개발한다. 각 Phase는 `phases/<phase-dir>/` 디렉토리에 `index.json` + `step<N>.md`로 구성된다. 실행은 `python scripts/execute.py <phase-dir>`로 한다.
+
+전체 워크플로우는 [`.claude/commands/harness.md`](./.claude/commands/harness.md) 참조.
+
+## 문서
+
+| 문서 | 내용 |
+|---|---|
+| [`CLAUDE.md`](./CLAUDE.md) | 프로젝트 규칙 (CRITICAL 룰 + 디렉터리 책임 + 명령어) |
+| [`docs/PRD.md`](./docs/PRD.md) | 제품 요구 사항 (10개 기능, 11종 에러, 16종 엣지 케이스) |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | 아키텍처 (디렉터리 / 데이터 흐름 / API 스펙 / 타입 정의) |
+| [`docs/ADR.md`](./docs/ADR.md) | Architecture Decision Records (26개 결정) |
+| [`docs/UI_GUIDE.md`](./docs/UI_GUIDE.md) | UI/UX 가이드 (디자인 토큰 + 안티패턴) |
+
+## 보안 / 비용
+
+- API 키는 `.env.local`에서만 읽으며 서버 사이드(Route Handler) 코드에서만 접근한다. `NEXT_PUBLIC_` 접두사로 노출 금지.
+- Gemini 2.5 Pro 무료 티어 안에서 1인 사용량(하루 5~20회 분석) 충분. 부족 시 ADR-011의 fallback 경로(Claude Sonnet 4.6, 호출당 ~$0.020)로 마이그레이션.
+- 분석 결과는 사용자 브라우저의 localStorage에만 저장된다 (서버 DB 없음).
