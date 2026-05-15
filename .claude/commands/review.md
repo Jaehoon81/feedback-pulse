@@ -103,6 +103,11 @@ npm run lint && npm run build && npm run test 2>&1 | tee .artifacts/reviews/$(da
 
 전체 출력은 `.artifacts/reviews/{YYYY-MM-DD}-build.log`에 저장하고, review 본문에는 요약만 (`✅ all passed` / `❌ 3 lint errors, see build.log`).
 
+> **build.log 파일명 두 패턴 (의도된 분리)**:
+> - **자동 (phase 단위)**: `execute.py _run_build_gate`가 phase 종료 시 `{YYYY-MM-DD}-{phase-name}-build.log` 생성 (예: `2026-05-15-0-foundation-build.log`).
+> - **수동 (전체)**: 사람이 본 `/review` 명령을 직접 실행할 때 위 `tee` 명령으로 `{YYYY-MM-DD}-build.log` 생성 (phase 접미사 없음).
+> - 두 형태 모두 `.artifacts/reviews/`에 공존. phase별 추적은 자동 로그를, 전체 코드베이스 검증은 수동 로그를 본다.
+
 ## 4. 출력 형식
 
 각 항목에 **우선순위**를 함께 표기한다:
@@ -123,14 +128,14 @@ npm run lint && npm run build && npm run test 2>&1 | tee .artifacts/reviews/$(da
 
 ### 4-A. 결과 저장 — `.artifacts/reviews/{YYYY-MM-DD}-review.md`
 
-review 본문은 위 표 + 항목별 위반 상세를 마크다운으로 정리해 `.artifacts/reviews/{YYYY-MM-DD}-review.md`에 저장한다. 디렉토리가 없으면 `mkdir -p .artifacts/reviews` 후 작성. build 로그는 같은 디렉토리의 `-build.log`로 분리. 본문에는 build 로그 요약 한 줄만 포함하고 raw 출력은 링크.
+review 본문은 위 표 + 항목별 위반 상세를 마크다운으로 정리해 `.artifacts/reviews/{YYYY-MM-DD}-review.md`에 저장한다. 디렉토리가 없으면 `mkdir -p .artifacts/reviews` 후 작성. build 로그는 같은 디렉토리의 `-build.log`로 분리 (수동 실행은 `{YYYY-MM-DD}-build.log`, 자동 phase 단위는 `{YYYY-MM-DD}-{phase}-build.log`). 본문에는 build 로그 요약 한 줄만 포함하고 raw 출력은 링크.
 
 ```markdown
 # Review {YYYY-MM-DD} — {phase-name 또는 전체}
 
 ## 요약
 - H 위반: N건 / M 위반: N건 / L 위반: N건
-- Build gate: ✅ / ❌ (see `{YYYY-MM-DD}-build.log`)
+- Build gate: ✅ / ❌ (see `{YYYY-MM-DD}-build.log` 또는 `{YYYY-MM-DD}-{phase}-build.log`)
 
 ## 위반 상세
 ### [H] 3-1 CLAUDE.md CRITICAL

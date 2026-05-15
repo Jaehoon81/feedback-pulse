@@ -4,8 +4,9 @@
 # .gitignore에서 디렉토리 전체가 ignore되지만 `.gitkeep`은 예외로 추적된다(아래 .gitignore 규칙 확인).
 #
 # 하위 구조:
-#   screenshots/{phase-name}/  — Playwright UI 캡처 (UI Phase AC)
-#   reviews/{YYYY-MM-DD}-review.md     — /review 결과 마크다운
-#   reviews/{YYYY-MM-DD}-build.log     — npm run lint/build/test raw 출력
+#   screenshots/{phase-name}/                 — Playwright UI 캡처 (UI Phase AC)
+#   reviews/{YYYY-MM-DD}-review.md            — /review 결과 마크다운 (수동)
+#   reviews/{YYYY-MM-DD}-build.log            — /review 수동 실행 시 raw 출력
+#   reviews/{YYYY-MM-DD}-{phase}-build.log    — execute.py가 phase 종료 시 자동 기록
 #
 # git에는 본 .gitkeep만 추적된다. 산출물 자체는 ignore.
