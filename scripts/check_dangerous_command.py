@@ -26,7 +26,9 @@ PATTERNS = [
     # .env 파일 덮어쓰기 차단 (echo "" > .env.local 같은 패턴)
     (r'>\s*\.env(?:\.|\s|$)', '> .env redirect'),
     # 환경변수 파일 stdout 노출 차단 (cat .env, cat .env.local 등)
-    (r'\bcat\s+[^|;&]*\.env\b', 'cat .env'),
+    # negative lookbehind로 .env.example / .env.template / .env.sample 등 안전 템플릿 변형은 화이트리스트 통과
+    # (Python re는 분리 lookbehind 각각 길이가 고정이면 OK)
+    (r'\bcat\s+[^|;&]*\.env(?:\.[A-Za-z0-9_-]+)*(?<!\.example)(?<!\.template)(?<!\.sample)(?=[\s|;&]|$)', 'cat .env'),
     # npm 레지스트리 변경 차단 (악성 미러 우회)
     (r'\bnpm\s+config\s+set\s+registry\b', 'npm registry change'),
     # 과잉 권한 부여 차단

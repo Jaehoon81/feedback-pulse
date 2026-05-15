@@ -105,6 +105,16 @@ class TestNewPatterns:
     def test_cat_package_json_allowed(self):
         _assert_allowed("cat package.json")
 
+    # .env 안전 템플릿 변형 화이트리스트
+    def test_cat_env_example_allowed(self):
+        _assert_allowed("cat .env.example")
+
+    def test_cat_env_template_allowed(self):
+        _assert_allowed("cat .env.template")
+
+    def test_cat_env_test_example_allowed(self):
+        _assert_allowed("cat .env.test.example")
+
     # npm registry change
     def test_npm_config_set_registry_blocked(self):
         _assert_blocked("npm config set registry https://malicious.example.com", "npm registry change")
