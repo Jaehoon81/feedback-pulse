@@ -575,20 +575,52 @@ class StepExecutor:
 
     def _run_build_gate(self):
         """phase 종료 시 npm run lint/build/test 게이트. package.json 부재 시 skip.
-        실패 시 top index를 error로 마크하고 exit 1 (연쇄 모드 안전)."""
+        실패 시 top index를 error로 마크하고 exit 1 (연쇄 모드 안전).
+        stdout/stderr를 콘솔에 흘리면서 .artifacts/reviews/{date}-{phase}-build.log에 동시 기록 (tee).
+        review.md 4-A의 -build.log 명명 규약과 일치."""
         if not (ROOT / "package.json").exists():
             print("  skip build gate: no package.json yet")
             return
-        for cmd in (["npm", "run", "lint"], ["npm", "run", "build"], ["npm", "run", "test"]):
-            print(f"  → {' '.join(cmd)}")
-            # encoding 명시: npm/vitest 출력에 한글 테스트 이름이 섞일 때 cp949 디코딩 실패 회피
-            r = subprocess.run(cmd, cwd=self._root, shell=False,
-                               encoding="utf-8", errors="replace")
-            if r.returncode != 0:
-                print(f"\n  ✗ Build gate failed: {' '.join(cmd)} (exit {r.returncode})")
-                self._update_top_index("error")
-                sys.exit(1)
-        print("  ✓ Build gate passed (lint + build + test)")
+
+        log_dir = ROOT / ".artifacts" / "reviews"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        date_str = datetime.now(self.TZ).strftime("%Y-%m-%d")
+        log_path = log_dir / f"{date_str}-{self._phase_name}-build.log"
+
+        with log_path.open("w", encoding="utf-8") as log_f:
+            log_f.write(f"# build gate — {self._phase_name} @ {self._stamp()}\n")
+            for cmd in (["npm", "run", "lint"], ["npm", "run", "build"], ["npm", "run", "test"]):
+                header = f"  → {' '.join(cmd)}"
+                print(header)
+                log_f.write(f"\n## {' '.join(cmd)}\n")
+                log_f.flush()
+
+                # encoding 명시: npm/vitest 출력에 한글 테스트 이름이 섞일 때 cp949 디코딩 실패 회피
+                # stderr를 stdout으로 합쳐서 단일 스트림 tee
+                proc = subprocess.Popen(
+                    cmd, cwd=self._root, shell=False,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    text=True, bufsize=1,
+                    encoding="utf-8", errors="replace",
+                )
+                assert proc.stdout is not None
+                for line in iter(proc.stdout.readline, ""):
+                    sys.stdout.write(line)
+                    sys.stdout.flush()
+                    log_f.write(line)
+                    log_f.flush()
+                proc.stdout.close()
+                rc = proc.wait()
+
+                if rc != 0:
+                    fail_msg = f"\n  ✗ Build gate failed: {' '.join(cmd)} (exit {rc})"
+                    print(fail_msg)
+                    log_f.write(fail_msg + "\n")
+                    log_f.write(f"  log: {log_path.as_posix()}\n")
+                    self._update_top_index("error")
+                    sys.exit(1)
+            log_f.write("\n  ✓ Build gate passed (lint + build + test)\n")
+        print(f"  ✓ Build gate passed (lint + build + test) — log: {log_path.as_posix()}")
 
 
 def main():

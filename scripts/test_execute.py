@@ -3,6 +3,7 @@ execute.py 리팩터링 안전망 테스트.
 리팩터링 전후 동작이 동일한지 검증한다.
 """
 
+import io
 import json
 import sys
 from datetime import datetime, timedelta
@@ -802,11 +803,16 @@ class TestBuildGate:
         (tmp_project / "package.json").write_text("{}", encoding="utf-8")
         calls: list = []
 
-        def fake_run(cmd, **kwargs):
-            calls.append(cmd)
-            return MagicMock(returncode=0)
+        class FakePopen:
+            def __init__(self, cmd, **kwargs):
+                calls.append(cmd)
+                self.stdout = io.StringIO("")
+                self.returncode = 0
 
-        monkeypatch.setattr("subprocess.run", fake_run)
+            def wait(self):
+                return 0
+
+        monkeypatch.setattr("subprocess.Popen", FakePopen)
         with patch.object(ex, "ROOT", tmp_project):
             executor._run_build_gate()
         assert calls == [["npm", "run", "lint"], ["npm", "run", "build"], ["npm", "run", "test"]]
@@ -814,15 +820,45 @@ class TestBuildGate:
     def test_failure_exits_1(self, executor, tmp_project, monkeypatch):
         (tmp_project / "package.json").write_text("{}", encoding="utf-8")
 
-        def fake_run(cmd, **kwargs):
-            return MagicMock(returncode=1)
+        class FakePopen:
+            def __init__(self, cmd, **kwargs):
+                self.stdout = io.StringIO("")
+                self.returncode = 1
 
-        monkeypatch.setattr("subprocess.run", fake_run)
+            def wait(self):
+                return 1
+
+        monkeypatch.setattr("subprocess.Popen", FakePopen)
         executor._update_top_index = lambda status: None
         with patch.object(ex, "ROOT", tmp_project):
             with pytest.raises(SystemExit) as exc_info:
                 executor._run_build_gate()
         assert exc_info.value.code == 1
+
+    def test_creates_build_log_file(self, executor, tmp_project, monkeypatch):
+        """phase 종료 시 .artifacts/reviews/{date}-{phase}-build.log 생성 검증."""
+        (tmp_project / "package.json").write_text("{}", encoding="utf-8")
+
+        class FakePopen:
+            def __init__(self, cmd, **kwargs):
+                self.stdout = io.StringIO(f"output of {' '.join(cmd)}\n")
+                self.returncode = 0
+
+            def wait(self):
+                return 0
+
+        monkeypatch.setattr("subprocess.Popen", FakePopen)
+        with patch.object(ex, "ROOT", tmp_project):
+            executor._run_build_gate()
+
+        log_dir = tmp_project / ".artifacts" / "reviews"
+        logs = list(log_dir.glob(f"*-{executor._phase_name}-build.log"))
+        assert len(logs) == 1, f"build.log not found in {log_dir}"
+        content = logs[0].read_text(encoding="utf-8")
+        assert "npm run lint" in content
+        assert "npm run build" in content
+        assert "npm run test" in content
+        assert "Build gate passed" in content
 
 
 # ---------------------------------------------------------------------------
