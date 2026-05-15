@@ -24,15 +24,17 @@
 2. **자기완결성** — 각 step 파일은 독립된 Claude 세션에서 실행된다. "이전 대화에서 논의한 바와 같이" 같은 외부 참조는 금지한다. 필요한 정보는 전부 파일 안에 적는다.
 3. **사전 준비 강제** — 관련 문서 경로와 이전 step에서 생성/수정된 파일 경로를 명시한다. 세션이 코드를 읽고 맥락을 파악한 뒤 작업하도록 유도한다.
 4. **시그니처 수준 지시** — 함수/클래스의 인터페이스만 제시하고 내부 구현은 에이전트 재량에 맡긴다. 단, 설계 의도에서 벗어나면 안 되는 핵심 규칙(멱등성, 보안, 데이터 무결성 등)은 반드시 명시한다.
+4-1. **TDD 선행** (services / lib만 해당) — `services/youtube.ts`, `services/analyzer.ts`, `lib/storage.ts`, `lib/markdown.ts` 등 services/lib 함수는 테스트 step을 구현 step보다 앞 번호로 배치한다. 커밋 순서로 검증되며(review.md 3-4), 외부 의존성은 fake 주입으로 격리한다 (CLAUDE.md CRITICAL 참조).
 5. **AC는 실행 가능한 커맨드** — "~가 동작해야 한다" 같은 추상적 서술이 아닌 `npm run build && npm test` 같은 실제 실행 가능한 검증 커맨드를 포함한다.
 6. **주의사항은 구체적으로** — "조심해라" 대신 "X를 하지 마라. 이유: Y" 형식으로 적는다.
 7. **네이밍** — step name은 kebab-case slug로, 해당 step의 핵심 모듈/작업을 한두 단어로 표현한다 (예: `project-setup`, `api-layer`, `auth-flow`).
 8. **Phase 간 참조** — 이전 Phase의 산출물에 의존하는 step은 그 Phase 디렉토리의 산출물 경로를 `## 읽어야 할 파일`에 명시한다. 다음 Phase가 자기완결적으로 시작할 수 있도록 한다.
 9. **외부 의존성/SDK 명시** — 외부 API(LLM, DB 등)를 호출하는 step은 사용할 SDK와 모델 ID를 step.md에 명시한다. 본 프로젝트의 LLM 1차 채택은 `@google/genai` + `gemini-2.5-pro` (ADR-011, fallback은 `@anthropic-ai/sdk` + `claude-sonnet-4-6`). Phase 3 analyzer 작성 시 이 결정을 명시해 SDK 혼동을 방지한다.
+9-1. **sub-session API 키 격리** — `execute.py`는 sub-session 환경에서 `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` / `YOUTUBE_API_KEY`를 strip한다 (prompt leak 방지). 따라서 step 안에서 실제 외부 API를 호출하는 코드/테스트를 돌리려 하지 마라. services 함수는 fake 클라이언트 주입 vitest로만 검증하고, 실제 키 통합 검증은 phase 완료 후 사람이 `npm run dev`로 수동 확인한다.
 
 ### D. 파일 생성
 
-사용자가 승인하면 아래 파일들을 생성한다.
+사용자가 C 단계 step 설계를 승인하면 **Claude가** 아래 파일들을 일괄 생성한다 (D-1 top-level index 갱신 → D-2 phase별 index.json → D-3 step{N}.md). 사용자 수동 작성이 아니다. 생성 후 즉시 E 단계 실행으로 넘어간다.
 
 #### D-1. `phases/index.json` (전체 현황)
 
