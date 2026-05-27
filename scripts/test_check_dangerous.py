@@ -48,10 +48,10 @@ class TestExistingPatterns:
         _assert_allowed("rm foo.txt")
 
     def test_git_push_force_blocked(self):
-        _assert_blocked("git push --force origin main", "git push --force")
+        _assert_blocked("git push --force origin master", "git push --force")
 
     def test_git_push_force_with_lease_allowed(self):
-        _assert_allowed("git push --force-with-lease origin main")
+        _assert_allowed("git push --force-with-lease origin master")
 
     def test_git_reset_hard_blocked(self):
         _assert_blocked("git reset --hard HEAD~1", "git reset --hard")

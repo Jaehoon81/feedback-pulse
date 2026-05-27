@@ -76,7 +76,7 @@ def test_g2_global_pre_bash():
     blocks = [
         ("rm -rf /tmp/foo  # 구체 경로(글로벌은 통과)", "rm -rf /tmp/foo", 0),  # 글로벌은 루트/홈/.만 차단
         ("rm -rf /", "rm -rf /", 2),
-        ("git push --force", "git push --force origin main", 2),
+        ("git push --force", "git push --force origin master", 2),
         ("git reset --hard", "git reset --hard HEAD", 2),
         ("DROP TABLE", "psql -c 'DROP TABLE users'", 2),
         ("cat .env", "cat .env.local", 2),
