@@ -55,6 +55,8 @@ npm run dev
 
 본 프로젝트는 Phase 단위 step 명세로 개발한다. 각 Phase는 `phases/<phase-dir>/` 디렉토리에 `index.json` + `step<N>.md`로 구성된다. 실행은 `python scripts/execute.py <phase-dir>`로 한다.
 
+각 Phase의 **마지막 step은 항상 `phase-review`** — `.claude/commands/review.md` 체크리스트를 직전 phase 변경 사항에 자동 적용하고 이슈 발견 시 같은 step에서 즉시 fix까지 수행한다 (사용자 개입 없음). 사용자가 직접 review하는 시점은 6 Phase 완료 후 C-7-A 최종 검증 1회뿐.
+
 전체 워크플로우는 [`.claude/commands/harness.md`](./.claude/commands/harness.md) 참조.
 
 ## 문서

@@ -1,6 +1,6 @@
 이 프로젝트는 Harness 프레임워크를 사용한다. 아래 워크플로우에 따라 작업을 진행하라.
 
-**큰 프로젝트는 여러 Phase로 나누고, Phase별 step 명세를 한 번에 일괄 설계한 뒤 실행 단계에서 다중 Phase 자동 연쇄로 진행한다. 인간 검토는 한 번(C-D 단계)만 하고, 실행(E)은 자동화한다.**
+**큰 프로젝트는 여러 Phase로 나누고, Phase별 step 명세를 한 번에 일괄 설계한 뒤 실행 단계에서 다중 Phase 자동 연쇄로 진행한다. 인간 검토는 두 시점 — (1) step 설계 검토(C 단계, C-1 체크리스트) + (2) 6 Phase 완료 후 최종 검증(C-7-A 사용자 수동 `/review`). 실행(E)은 자동화이며, 각 phase별 자동 review+fix는 마지막 `phase-review` step(C 원칙 10번)이 담당한다.**
 
 ---
 
@@ -31,6 +31,20 @@
 8. **Phase 간 참조** — 이전 Phase의 산출물에 의존하는 step은 그 Phase 디렉토리의 산출물 경로를 `## 읽어야 할 파일`에 명시한다. 다음 Phase가 자기완결적으로 시작할 수 있도록 한다.
 9. **외부 의존성/SDK 명시** — 외부 API(LLM, DB 등)를 호출하는 step은 사용할 SDK와 모델 ID를 step.md에 명시한다. 본 프로젝트의 LLM 1차 채택은 `@google/genai` + `gemini-2.5-pro` (ADR-011, fallback은 `@anthropic-ai/sdk` + `claude-sonnet-4-6`). Phase 3 analyzer 작성 시 이 결정을 명시해 SDK 혼동을 방지한다.
 9-1. **sub-session API 키 격리** — `execute.py`는 sub-session 환경에서 `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` / `YOUTUBE_API_KEY`를 strip한다 (prompt leak 방지). 따라서 step 안에서 실제 외부 API를 호출하는 코드/테스트를 돌리려 하지 마라. services 함수는 fake 클라이언트 주입 vitest로만 검증하고, 실제 키 통합 검증은 phase 완료 후 사람이 `npm run dev`로 수동 확인한다.
+10. **Phase Review Step 자동 삽입** — Claude는 각 phase의 step 설계 시 **마지막 step으로 항상 `phase-review` step을 자동 추가**한다 (사용자가 명시 요청하지 않아도). 이 step은 `review.md` 체크리스트를 직전 phase 변경 사항에 적용하고, 이슈 발견 시 같은 step 안에서 즉시 fix까지 수행한다. step 자가 교정(MAX_RETRIES=3)이 자동 보호망이며, 실패 시 phase status=error로 다음 phase 진입을 차단한다. 사용자가 직접 review하는 흐름은 C-7-A 최종 검증(6 phase 완료 후 전체 코드베이스)에서만 발생한다. step.md 표준 템플릿은 D-3 "Phase Review Step 변형" 참조.
+
+#### C-1. 사용자 검토 체크리스트 (step 설계 초안 제출 시 함께 제공)
+
+step 설계 초안을 사용자에게 제출할 때, Claude는 아래 체크리스트를 **초안 끝에 별도 블록으로 함께 출력**하여 검토 포인트를 명시한다. 사용자는 이 3가지를 우선 확인한 뒤 승인 여부를 결정한다. 누락 발견 시 Claude는 step 초안을 수정 후 재제출한다 (재검토는 누락 항목 위주로 짧게 진행).
+
+| # | 원칙 | 확인 질문 |
+|---|------|-----------|
+| 1 | **4-1 TDD 선행 (services/lib)** | `services/youtube.ts`, `services/analyzer.ts`, `lib/storage.ts`, `lib/markdown.ts` 등의 step에서 **테스트 step 번호가 구현 step보다 앞**에 있는가? |
+| 2 | **9-1 sub-session API 키 격리** | services step 본문에 **"fake 클라이언트 주입 vitest"** 명시 + 실제 외부 API 호출 코드/테스트가 step 안에 없는가? |
+| 3 | **9 SDK + 모델 ID 박힘** | `services/analyzer.ts` 등 LLM 호출 step의 AC에 **`@google/genai` + `gemini-2.5-pro`** (또는 fallback의 `@anthropic-ai/sdk` + `claude-sonnet-4-6`) 명시되어 있는가? |
+| 4 | **10 phase-review step 자동 삽입** | 각 phase의 **마지막 step**이 `name: phase-review`이고 D-3 "Phase Review Step 변형" 표준 step.md 템플릿을 그대로 사용했는가? (커스터마이즈 금지) |
+
+네 항목 모두 통과해야 D 단계로 진입한다.
 
 ### D. 파일 생성
 
@@ -64,10 +78,13 @@
   "steps": [
     { "step": 0, "name": "project-setup", "status": "pending" },
     { "step": 1, "name": "core-types", "status": "pending" },
-    { "step": 2, "name": "api-layer", "status": "pending" }
+    { "step": 2, "name": "api-layer", "status": "pending" },
+    { "step": 3, "name": "phase-review", "status": "pending" }
   ]
 }
 ```
+
+마지막 step은 항상 `phase-review`(C 원칙 10번). Claude가 D 단계에서 자동 추가한다.
 
 필드 규칙:
 
@@ -125,6 +142,7 @@ npm test        # 테스트 통과
 - **API / Logic Phase**: 위 기본 AC + 해당 모듈의 vitest 단위/통합 테스트 모두 통과 + **도메인 에러 5종(`InvalidUrlError`/`VideoNotFoundError`/`CommentsDisabledError`/`QuotaExceededError`/`AnalysisFailedError`)이 Route Handler에서 정확한 HTTP 상태(400/404/422/429/503)로 매핑되는 vitest 통합 테스트 1개 이상**.
 - **외부 API 호출 Phase** (services/youtube.ts, services/analyzer.ts 등): 위 기본 AC + `services/` 함수가 fetch / Gemini SDK 클라이언트(`GoogleGenAI`)를 **인자로 주입받는 형태**인지 정적 검사 (fake 클라이언트 주입 vitest 테스트로 검증) + **Zod 재검증 호출 1개 이상** (ADR-013: Gemini OpenAPI 3.0 Schema 부분집합 한계 보완).
 - **UI Phase**: 위 기본 AC + Playwright MCP로 데스크톱(1440×900) × 모바일(390×844) × 라이트/다크 = **4종 스크린샷 캡처 + 콘솔 에러 0건**. 스크린샷은 `.artifacts/screenshots/{phase-name}/`에 저장 (phase별 분리). Playwright 캡처가 길어질 수 있으므로 **step을 페이지(또는 컴포넌트 그룹) 단위로 분할**하여 `execute.py` 단일 step 30분 timeout(`timeout=1800`) 안에서 안전 마진을 확보한다. 필요 시 step의 `index.json`에 `timeout_seconds: 3600`을 명시해 개별 step에 한해 timeout을 늘릴 수 있다 (아래 D-3 참조).
+- **Phase Review Step** (각 phase 마지막, 자동 삽입 — C 원칙 10번): `npm run lint && npm run build && npm run test` 통과 + `review.md` 체크리스트 항목 중 본 phase에 해당하는 모든 항목 통과 + 이슈 발견 → 즉시 fix → 재검증 사이클 후 최종 이슈 0건. 표준 step.md 템플릿은 아래 "Phase Review Step 변형" 참조. **큰 phase(UI / Playwright 포함 등)는 review + fix + build gate 합산 시간이 30분을 넘을 수 있으므로** D-2 index.json에서 `timeout_seconds: 3600` (1시간) 명시 권장.
 
 ## 검증 절차
 
@@ -142,6 +160,53 @@ npm test        # 테스트 통과
 
 - {이 step에서 하지 말아야 할 것. "X를 하지 마라. 이유: Y" 형식}
 - 기존 테스트를 깨뜨리지 마라
+```
+
+#### Phase Review Step 변형 (표준 step.md 템플릿, C 원칙 10번)
+
+각 phase의 마지막 step은 항상 `name: phase-review`이며, step.md 본문은 아래 표준 템플릿을 그대로 사용한다 (phase별 커스터마이즈 없음 — 자동화 일관성). `{phase}`만 실제 phase 이름으로 치환한다.
+
+```markdown
+# Step {N}: phase-review
+
+## 읽어야 할 파일
+
+먼저 아래를 읽고 본 phase 변경 사항의 전체 맥락을 파악하라:
+
+- `/.claude/commands/review.md` (체크리스트 본문)
+- `/CLAUDE.md`, `/docs/ARCHITECTURE.md`, `/docs/ADR.md`
+- 본 phase에서 만든/수정한 모든 파일 (직전 step들의 산출물)
+
+## 작업
+
+1. `review.md` 2-A의 phase 단위 패턴으로 직전 phase 변경 사항을 추출한다 (master는 본 프로젝트 기본 브랜치 가정 — 다른 환경은 `git rev-parse --abbrev-ref origin/HEAD`로 동적 조회):
+   ```bash
+   git diff master..HEAD -- 'src/**' ':!phases/{phase}/step*-output.json'
+   git log master..HEAD --oneline --grep='^(feat|fix)({phase}):'
+   ```
+2. `review.md` 3절 체크리스트(CLAUDE.md CRITICAL 규칙, 아키텍처 준수, 도메인 에러 매핑, LLM 응답 안전망, 접근성, UI 규칙, 타입 안전성)를 직전 변경에 전부 적용한다.
+3. 이슈 발견 시 **즉시 같은 step 안에서 fix 코드 작성**. 별도 step으로 미루지 마라.
+4. fix 후 `npm run lint && npm run build && npm run test`를 한 번 더 통과시킨다.
+5. review 결과(점검한 체크리스트 항목 수 / 발견 이슈 N건 / 적용 fix N건)를 step output JSON의 `summary` 필드에 1줄로 요약한다. **별도 `.md` 파일 저장 안 함** — 자동 호출은 step output JSON으로 trace, `.artifacts/reviews/{date}-review.md`는 C-7-A 수동 호출 전용이다.
+
+## Acceptance Criteria
+
+```bash
+npm run lint && npm run build && npm run test
+```
+
+추가:
+- `review.md` 체크리스트 항목 중 본 phase에 해당하는 모든 항목이 통과한다.
+- 이슈 발견 → fix → 재검증 사이클 후 최종 이슈 0건.
+
+## 금지사항
+
+- 본 phase에서 변경되지 않은 파일을 건드리지 마라. 이유: 잘못된 영향 전파.
+- "다음 phase에서 처리" 같은 미루기 금지. 이유: phase 게이트 의미 상실.
+- review 결과를 기록만 하고 fix를 하지 않는 행위 금지. 이유: 자동화 흐름이 깨짐.
+- 새 feature 추가 금지. 이유: review step의 책임은 점검 + fix만.
+- `tee .artifacts/reviews/...build.log` 리다이렉트 금지. 이유: `execute.py`가 phase 종료 시 자동 기록한다(`{date}-{phase}-build.log`). 사용자 수동 `/review` 호출(C-7-A) 시에만 review.md 3-7 `tee` 명령이 적용된다.
+- git commit 메시지 직접 작성 금지. 이유: `execute.py`가 step 종료 시 `fix({phase}): step N — phase-review` 형식으로 자동 commit한다.
 ```
 
 ### E. 실행
@@ -187,6 +252,25 @@ done
 - **즉시 중단** — `error`/`blocked` 발생 시 다음 Phase로 넘어가지 않는다. 사용자가 직접 해결 후 같은 루프를 재실행하면 `completed` Phase는 건너뛰고 `pending`부터 이어진다.
 - **`--push` 보류** — 연쇄 중에는 `--push`를 쓰지 않는다. 모든 Phase 완료 후 마지막 브랜치에서 별도로 push.
 - **브랜치 누적** — 각 Phase는 자체 `feat-{phase-name}` 브랜치를 생성한다. 6 Phase가 끝나면 브랜치 6개가 생긴다(의도된 동작).
+
+**E-3. Phase Review 자동화 (디폴트, 사용자 개입 없음)**
+
+각 phase의 마지막 step으로 자동 삽입된 `phase-review` step(C 원칙 10번)이 `review.md` 체크리스트 적용 + 이슈 자동 fix를 수행한다. E-2 원샷 연쇄와 결합되어 6 Phase 전체 풀 자동화.
+
+**자동 흐름:**
+
+1. `python scripts/execute.py {phase}` 또는 E-2 PowerShell 루프 실행.
+2. phase 내 일반 step들이 순차 진행 → 마지막 `phase-review` step 도달.
+3. Claude sub-session이 `review.md` 체크리스트를 직전 phase 변경 사항(`git diff master..HEAD`)에 자동 적용.
+4. 이슈 0건 → step status=completed → 다음 phase 자동 진입.
+5. 이슈 발견 → 같은 step 안에서 즉시 fix 코드 작성 → build gate (lint/build/test) 재실행 → 통과 시 completed.
+6. 자가 교정 MAX_RETRIES=3 후에도 실패 → step status=error → 다음 phase 차단 (사용자 개입 필요).
+
+**사용자 직접 review는 C-7-A에서만**: 6 Phase 전부 완료 후 사용자가 전체 코드베이스를 대상으로 `/review` 슬래시 커맨드를 수동 호출 — 자동 review의 false negative 대비 최종 안전망.
+
+**E-2와 E-3의 관계**:
+
+E-2(다중 Phase 자동 연쇄)는 phase 단위 *호출 메커니즘*이고, E-3(Phase Review 자동화)은 phase 단위 *품질 게이트*다. E-2가 phase 순서대로 호출하는 동안, 각 phase의 마지막 step인 phase-review가 E-3 역할을 수행한다 — 둘은 직교하며, 본 프로젝트는 두 모드를 함께 사용하는 것이 디폴트.
 
 execute.py가 자동으로 처리하는 것:
 

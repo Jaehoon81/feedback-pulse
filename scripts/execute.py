@@ -60,7 +60,9 @@ class StepExecutor:
     SENSITIVE_ENV_KEYS = ("GEMINI_API_KEY", "ANTHROPIC_API_KEY", "YOUTUBE_API_KEY")
     AUTH_FAIL_HINTS = ("not authenticated", "please login", "authentication failed", "auth required")
     FEAT_MSG = "feat({phase}): step {num} — {name}"
+    FIX_MSG = "fix({phase}): step {num} — {name}"  # phase-review step 전용 (의미 명확성)
     CHORE_MSG = "chore({phase}): step {num} output"
+    REVIEW_STEP_NAME = "phase-review"
     TZ = timezone(timedelta(hours=9))
 
     def __init__(
@@ -212,7 +214,8 @@ class StepExecutor:
         self._run_git("reset", "HEAD", "--", index_rel)
 
         if self._run_git("diff", "--cached", "--quiet").returncode != 0:
-            msg = self.FEAT_MSG.format(phase=self._phase_name, num=step_num, name=step_name)
+            template = self.FIX_MSG if step_name == self.REVIEW_STEP_NAME else self.FEAT_MSG
+            msg = template.format(phase=self._phase_name, num=step_num, name=step_name)
             r = self._run_git("commit", "-m", msg)
             if r.returncode == 0:
                 print(f"  Commit: {msg}")
@@ -558,6 +561,9 @@ class StepExecutor:
 
         # 빌드 게이트: phase 종료 시 lint+build+test 1회 (.claude/settings.json Stop hook이
         # HARNESS_MODE=1 가드로 sub-session에서는 skip하므로, 진짜 게이트는 여기서 한 번).
+        # phase-review step의 AC와 동일 명령이라 명목상 중복이나, 의도된 안전망:
+        # (1) phase-review를 두지 않은 phase에서도 게이트 보장, (2) fix 후 최종 검증 한 번,
+        # (3) npm/vitest cache hit으로 재실행 비용은 ~수초 (lint/build/test 모두 incremental).
         if not self._dry_run:
             self._run_build_gate()
 

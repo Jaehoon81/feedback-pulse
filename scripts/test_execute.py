@@ -343,7 +343,7 @@ class TestCheckoutBranch:
 
     def test_branch_exists_checkout(self, executor):
         self._mock_git(executor, [
-            MagicMock(returncode=0, stdout="main\n", stderr=""),
+            MagicMock(returncode=0, stdout="master\n", stderr=""),
             MagicMock(returncode=0, stdout="", stderr=""),
             MagicMock(returncode=0, stdout="", stderr=""),
         ])
@@ -351,7 +351,7 @@ class TestCheckoutBranch:
 
     def test_branch_not_exists_create(self, executor):
         self._mock_git(executor, [
-            MagicMock(returncode=0, stdout="main\n", stderr=""),
+            MagicMock(returncode=0, stdout="master\n", stderr=""),
             MagicMock(returncode=1, stdout="", stderr="not found"),
             MagicMock(returncode=0, stdout="", stderr=""),
         ])
@@ -359,7 +359,7 @@ class TestCheckoutBranch:
 
     def test_checkout_fails_exits(self, executor):
         self._mock_git(executor, [
-            MagicMock(returncode=0, stdout="main\n", stderr=""),
+            MagicMock(returncode=0, stdout="master\n", stderr=""),
             MagicMock(returncode=1, stdout="", stderr=""),
             MagicMock(returncode=1, stdout="", stderr="dirty tree"),
         ])
@@ -415,6 +415,26 @@ class TestCommitStep:
         commit_msgs = [c[2] for c in calls if c[0] == "commit"]
         assert len(commit_msgs) == 1
         assert "chore" in commit_msgs[0]
+
+    def test_phase_review_step_uses_fix_prefix(self, executor):
+        """phase-review step의 코드 커밋은 fix({phase}): prefix를 사용한다 (의미 명확성).
+        chore({phase}): 메타 커밋은 그대로."""
+        calls = []
+        def fake_git(*args):
+            calls.append(args)
+            if args[:2] == ("diff", "--cached"):
+                return MagicMock(returncode=1)
+            return MagicMock(returncode=0, stdout="", stderr="")
+        executor._run_git = fake_git
+
+        executor._commit_step(3, "phase-review")
+
+        commit_msgs = [c[2] for c in calls if c[0] == "commit"]
+        assert len(commit_msgs) == 2
+        assert commit_msgs[0].startswith("fix(mvp):"), \
+            f"phase-review는 fix prefix여야 함, got: {commit_msgs[0]}"
+        assert "phase-review" in commit_msgs[0]
+        assert commit_msgs[1].startswith("chore(mvp):")
 
 
 # ---------------------------------------------------------------------------
