@@ -7,7 +7,8 @@
       "name": "lib-toast-tests",
       "status": "completed",
       "started_at": "2026-05-28T14:45:37+0900",
-      "summary": "lib/toast.ts 테스트 16 케이스 (CRUD 6 + cap 3 / 2 + subscribe 6 + 중복·격리 2), @/lib/toast 미존재로 fail(의도)"
+      "summary": "lib/toast.ts 테스트 16 케이스 (CRUD 6 + cap 3 / 2 + subscribe 6 + 중복·격리 2), @/lib/toast 미존재로 fail(의도)",
+      "completed_at": "2026-05-28T14:48:25+0900"
     },
     {
       "step": 1,
