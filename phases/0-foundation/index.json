@@ -24,11 +24,14 @@
     {
       "step": 2,
       "name": "lib-errors",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         0,
         1
-      ]
+      ],
+      "started_at": "2026-05-28T11:44:58+0900",
+      "summary": "lib/errors.ts 도메인 에러 5종 + DomainErrorCode union 정의, 5 케이스 vitest 통과",
+      "completed_at": "2026-05-28T11:47:30+0900"
     },
     {
       "step": 3,
