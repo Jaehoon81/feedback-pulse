@@ -1,0 +1,80 @@
+{
+  "id": "a1b2c3d4-1234-4abc-9def-0123456789ab",
+  "createdAt": "2026-05-28T05:30:00.000Z",
+  "video": {
+    "id": "dQw4w9WgXcQ",
+    "title": "테스트 영상 — 첫 번째 \"리뷰\"",
+    "channelTitle": "테스트 채널",
+    "publishedAt": "2026-01-15T10:00:00.000Z",
+    "thumbnailUrl": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+    "commentCount": 230,
+    "viewCount": 12345,
+    "likeCount": 678
+  },
+  "commentCount": 200,
+  "executiveSummary": "시청자들은 영상의 설명력에 만족하지만 편집 속도와 오디오에 일부 아쉬움을 표현했습니다.\n전반적으로 긍정 반응이 우세합니다.",
+  "sentiment": {
+    "positive": 0.6,
+    "neutral": 0.25,
+    "negative": 0.15
+  },
+  "topics": [
+    { "name": "편집 속도", "count": 12, "sentiment": "negative" },
+    { "name": "설명력", "count": 23, "sentiment": "positive" },
+    { "name": "오디오 품질", "count": 5, "sentiment": "neutral" }
+  ],
+  "strengths": [
+    {
+      "point": "설명이 명확하고 쏙쏙 이해됩니다",
+      "evidence": [
+        { "commentIndex": 0, "text": "설명이 정말 쏙쏙 들어와요 👍" },
+        { "commentIndex": 4, "text": "이해하기 쉽게 풀어주셔서 감사합니다" }
+      ]
+    },
+    {
+      "point": "예시가 풍부합니다",
+      "evidence": [
+        { "commentIndex": 7, "text": "예시 덕분에 \"감\"이 잡혔어요" }
+      ]
+    }
+  ],
+  "improvements": [
+    {
+      "point": "편집 속도가 너무 빠릅니다",
+      "evidence": [
+        { "commentIndex": 1, "text": "편집이 너무 빨라서 따라가기 어려워요\n호흡 좀…" }
+      ]
+    },
+    {
+      "point": "오디오 볼륨 편차",
+      "evidence": [
+        { "commentIndex": 9, "text": "BGM이 목소리를 덮어요" }
+      ]
+    }
+  ],
+  "notableComments": [
+    {
+      "commentIndex": 0,
+      "text": "설명이 정말 쏙쏙 들어와요 👍",
+      "author": "alice",
+      "reason": "강한 긍정 반응 대표"
+    },
+    {
+      "commentIndex": 1,
+      "text": "편집이 너무 빨라서 따라가기 어려워요\n호흡 좀…",
+      "author": "bob",
+      "reason": "반복되는 개선 요청"
+    },
+    {
+      "commentIndex": 12,
+      "text": "다음 편 정말 기대돼요!!",
+      "reason": "구독자 충성도 신호"
+    },
+    {
+      "commentIndex": 18,
+      "text": "BGM이 목소리를 덮어요",
+      "author": "dave",
+      "reason": "구체적 기술 피드백"
+    }
+  ]
+}

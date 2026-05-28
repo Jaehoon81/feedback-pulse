@@ -12,7 +12,8 @@
     },
     {
       "dir": "2-analyzer",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-05-28T14:13:13+0900"
     },
     {
       "dir": "3-api-storage",

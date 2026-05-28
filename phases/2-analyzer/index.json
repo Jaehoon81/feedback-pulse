@@ -2,10 +2,62 @@
   "project": "feedback-pulse",
   "phase": "2-analyzer",
   "steps": [
-    { "step": 0, "name": "analyzer-tests", "status": "pending" },
-    { "step": 1, "name": "analyzer-impl", "status": "pending", "depends_on": [0] },
-    { "step": 2, "name": "markdown-tests", "status": "pending", "depends_on": [1] },
-    { "step": 3, "name": "markdown-impl", "status": "pending", "depends_on": [2] },
-    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
-  ]
+    {
+      "step": 0,
+      "name": "analyzer-tests",
+      "status": "completed",
+      "started_at": "2026-05-28T13:48:43+0900",
+      "completed_at": "2026-05-28T13:53:05+0900",
+      "summary": "analyzer 테스트 15 케이스 + Zod 스키마(6항목 ARCH 일치) 작성, fake GoogleGenAI 주입, impl 없어 fail(의도). @google/genai + zod 의존성 추가."
+    },
+    {
+      "step": 1,
+      "name": "analyzer-impl",
+      "status": "completed",
+      "depends_on": [
+        0
+      ],
+      "started_at": "2026-05-28T13:53:06+0900",
+      "completed_at": "2026-05-28T13:56:54+0900",
+      "summary": "services/analyzer.ts 구현 (gemini-2.5-pro + responseSchema + Zod 재검증 + id/createdAt 합성 + 35s 타임아웃), step 0 테스트 15건 + 전체 52건 통과"
+    },
+    {
+      "step": 2,
+      "name": "markdown-tests",
+      "status": "completed",
+      "depends_on": [
+        1
+      ],
+      "started_at": "2026-05-28T13:56:55+0900",
+      "completed_at": "2026-05-28T14:01:16+0900",
+      "summary": "markdown.test.ts 14 케이스(6절 헤더/순서/% 표기/FeedbackItem 인용/author 옵셔널/빈 배열/3·6개 경계/특수문자) + 픽스처 2종(full, empty-arrays). 구현 부재로 fail(의도), 기존 52건 통과."
+    },
+    {
+      "step": 3,
+      "name": "markdown-impl",
+      "status": "completed",
+      "depends_on": [
+        2
+      ],
+      "started_at": "2026-05-28T14:01:17+0900",
+      "completed_at": "2026-05-28T14:04:35+0900",
+      "summary": "lib/markdown.ts 구현, Report → 마크다운 6절 직렬화 (영상 헤더/요약/감성%/주제/강점·개선점 인용/주목댓글 author·reason), 외부 의존 0, test 70건/build/lint 통과"
+    },
+    {
+      "step": 4,
+      "name": "phase-review",
+      "status": "completed",
+      "depends_on": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "started_at": "2026-05-28T14:04:36+0900",
+      "completed_at": "2026-05-28T14:13:12+0900",
+      "summary": "체크리스트 7항목 점검, 이슈 1건(M, analyzer.ts finishReason 가드 누락 — ARCH 에러 매핑 명세 불일치) 발견·fix(가드 + 검증 테스트 1건 추가), lint/build/test 71건 통과."
+    }
+  ],
+  "created_at": "2026-05-28T13:48:43+0900",
+  "completed_at": "2026-05-28T14:13:13+0900"
 }
