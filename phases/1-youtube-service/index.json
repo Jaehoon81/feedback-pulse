@@ -2,10 +2,48 @@
   "project": "feedback-pulse",
   "phase": "1-youtube-service",
   "steps": [
-    { "step": 0, "name": "url-extractor-tests", "status": "pending" },
-    { "step": 1, "name": "url-extractor-impl", "status": "pending", "depends_on": [0] },
-    { "step": 2, "name": "youtube-service-tests", "status": "pending", "depends_on": [1] },
-    { "step": 3, "name": "youtube-service-impl", "status": "pending", "depends_on": [2] },
-    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
-  ]
+    {
+      "step": 0,
+      "name": "url-extractor-tests",
+      "status": "completed",
+      "started_at": "2026-05-28T13:09:39+0900",
+      "summary": "extractVideoId 테스트 15케이스(통과 7 + 실패 8) 작성, impl 없어 import 실패로 suite fail 상태(의도)"
+    },
+    {
+      "step": 1,
+      "name": "url-extractor-impl",
+      "status": "pending",
+      "depends_on": [
+        0
+      ]
+    },
+    {
+      "step": 2,
+      "name": "youtube-service-tests",
+      "status": "pending",
+      "depends_on": [
+        1
+      ]
+    },
+    {
+      "step": 3,
+      "name": "youtube-service-impl",
+      "status": "pending",
+      "depends_on": [
+        2
+      ]
+    },
+    {
+      "step": 4,
+      "name": "phase-review",
+      "status": "pending",
+      "depends_on": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "created_at": "2026-05-28T13:09:39+0900"
 }
