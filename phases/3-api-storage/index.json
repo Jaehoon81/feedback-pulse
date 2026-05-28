@@ -24,7 +24,10 @@
     {
       "step": 2,
       "name": "api-route-tests",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-05-28T14:25:31+0900",
+      "completed_at": "2026-05-28T14:29:00+0900",
+      "summary": "route.test.ts 13 케이스 (정상 1 + 도메인 에러 5종 HTTP 매핑 + 요청 검증 3 + 일반 Error→500 InternalError fallback + Cache-Control no-store + maxDuration=60), vi.mock으로 services/extractor 격리, impl 없어 import 단계 fail(의도)"
     },
     {
       "step": 3,
