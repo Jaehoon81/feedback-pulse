@@ -24,10 +24,13 @@
     {
       "step": 2,
       "name": "ui-history-actions",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         1
-      ]
+      ],
+      "started_at": "2026-05-28T15:26:25+0900",
+      "summary": "HistorySidebar(createStorage 경유 mount-load + EmptyState + 항목별 삭제 toast + activeId 하이라이트) + ReportActions(reportToMarkdown→Blob→createObjectURL/revokeObjectURL 다운로드 + copyToClipboard success/error toast), smoke test 6케이스 추가, 총 168 tests 통과, build/lint 통과.",
+      "completed_at": "2026-05-28T15:32:00+0900"
     },
     {
       "step": 3,
