@@ -13,10 +13,13 @@
     {
       "step": 1,
       "name": "url-extractor-impl",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         0
-      ]
+      ],
+      "started_at": "2026-05-28T13:12:13+0900",
+      "summary": "extractVideoId 정규식 기반 구현, step 0 테스트 15케이스 모두 통과",
+      "completed_at": "2026-05-28T13:13:30+0900"
     },
     {
       "step": 2,
