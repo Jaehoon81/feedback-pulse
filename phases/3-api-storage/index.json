@@ -7,7 +7,7 @@
       "name": "storage-tests",
       "status": "completed",
       "started_at": "2026-05-28T14:19:18+0900",
-      "completed_at": "2026-05-28T14:22:30+0900",
+      "completed_at": "2026-05-28T14:23:00+0900",
       "summary": "lib/storage.ts 테스트 16 케이스 (fake KeyValueStore 주입, 단일 키 feedback-pulse.v1.history, 50건 LRU cap, v1 마이그레이션 가드 — 잘못된 JSON/객체/구버전 키), 구현 없어 import 단계 fail(의도)"
     },
     {
