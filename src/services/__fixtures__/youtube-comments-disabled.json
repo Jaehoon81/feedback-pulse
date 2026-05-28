@@ -1,0 +1,13 @@
+{
+  "error": {
+    "code": 403,
+    "message": "The video identified by the videoId parameter has disabled comments.",
+    "errors": [
+      {
+        "domain": "youtube.commentThread",
+        "reason": "commentsDisabled",
+        "message": "The video identified by the videoId parameter has disabled comments."
+      }
+    ]
+  }
+}

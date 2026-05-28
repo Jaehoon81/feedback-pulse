@@ -1,0 +1,38 @@
+{
+  "kind": "youtube#commentThreadListResponse",
+  "nextPageToken": "NEXT_PAGE_TOKEN_1",
+  "items": [
+    {
+      "kind": "youtube#commentThread",
+      "id": "thread_001",
+      "snippet": {
+        "topLevelComment": {
+          "kind": "youtube#comment",
+          "id": "thread_001",
+          "snippet": {
+            "textDisplay": "Great &amp; useful video! It&#39;s the best.",
+            "authorDisplayName": "Alice",
+            "likeCount": 12,
+            "publishedAt": "2026-01-15T10:00:00Z"
+          }
+        }
+      }
+    },
+    {
+      "kind": "youtube#commentThread",
+      "id": "thread_002",
+      "snippet": {
+        "topLevelComment": {
+          "kind": "youtube#comment",
+          "id": "thread_002",
+          "snippet": {
+            "textDisplay": "Nice work &quot;keep it up&quot;",
+            "authorDisplayName": "Bob",
+            "likeCount": 3,
+            "publishedAt": "2026-01-14T09:00:00Z"
+          }
+        }
+      }
+    }
+  ]
+}
