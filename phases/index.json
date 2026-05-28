@@ -27,7 +27,8 @@
     },
     {
       "dir": "5-pages-e2e",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-05-28T16:05:19+0900"
     }
   ]
 }

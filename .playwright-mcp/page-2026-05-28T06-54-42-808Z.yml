@@ -1,0 +1,111 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - generic [ref=e6]:
+      - generic [ref=e7]:
+        - button "마크다운 다운로드" [ref=e8] [cursor=pointer]:
+          - img [ref=e9]
+          - text: 마크다운 다운로드
+        - button "리포트 복사" [ref=e11] [cursor=pointer]:
+          - img [ref=e12]
+          - text: 리포트 복사
+      - article [ref=e15]:
+        - generic [ref=e17]:
+          - heading "테스트 영상 제목" [level=1] [ref=e18]
+          - paragraph [ref=e19]: 테스트 채널
+          - paragraph [ref=e20]: 댓글 200개 분석
+        - generic [ref=e21]:
+          - heading "핵심 요약" [level=2] [ref=e22]
+          - paragraph [ref=e23]: 시청자는 콘텐츠 자체에는 긍정적이나 기술적 품질(음성/편집 속도)에 일부 개선 요청을 보냅니다. 전반적인 정보 전달력은 우수하다는 반응이 다수입니다.
+        - generic [ref=e24]:
+          - heading "감성 분포" [level=2] [ref=e25]
+          - generic [ref=e26]:
+            - img "긍정 62%, 중립 23%, 부정 15%" [ref=e27]
+            - list [ref=e31]:
+              - listitem [ref=e32]: 긍정 62%
+              - listitem [ref=e34]: 중립 23%
+              - listitem [ref=e36]: 부정 15%
+        - generic [ref=e38]:
+          - heading "주요 주제" [level=2] [ref=e39]
+          - list [ref=e40]:
+            - listitem [ref=e41]:
+              - generic [ref=e42]:
+                - generic [ref=e43]: 콘텐츠 품질
+                - generic [ref=e44]: ·
+                - generic [ref=e45]: 80건
+            - listitem [ref=e46]:
+              - generic [ref=e47]:
+                - generic [ref=e48]: 편집 속도
+                - generic [ref=e49]: ·
+                - generic [ref=e50]: 30건
+            - listitem [ref=e51]:
+              - generic [ref=e52]:
+                - generic [ref=e53]: 음성 품질
+                - generic [ref=e54]: ·
+                - generic [ref=e55]: 25건
+            - listitem [ref=e56]:
+              - generic [ref=e57]:
+                - generic [ref=e58]: 설명 명확성
+                - generic [ref=e59]: ·
+                - generic [ref=e60]: 18건
+        - generic [ref=e61]:
+          - heading "강점" [level=2] [ref=e62]
+          - list [ref=e63]:
+            - listitem [ref=e64]:
+              - paragraph [ref=e65]: 유익한 정보를 압축적으로 전달합니다.
+              - list [ref=e66]:
+                - listitem [ref=e67]: 정말 유익한 영상이었어요!
+            - listitem [ref=e68]:
+              - paragraph [ref=e69]: 설명 구조가 명확합니다.
+              - list [ref=e70]:
+                - listitem [ref=e71]: 순서대로 따라가니 이해가 쏙쏙 됩니다.
+        - generic [ref=e72]:
+          - heading "개선점" [level=2] [ref=e73]
+          - list [ref=e74]:
+            - listitem [ref=e75]:
+              - paragraph [ref=e76]: 편집 속도가 다소 빠르다는 의견이 반복됩니다.
+              - list [ref=e77]:
+                - listitem [ref=e78]: 편집이 너무 빨라요.
+            - listitem [ref=e79]:
+              - paragraph [ref=e80]: 음성 볼륨/품질 보완 요청이 있습니다.
+              - list [ref=e81]:
+                - listitem [ref=e82]: 음성이 잘 안 들립니다.
+        - generic [ref=e83]:
+          - heading "주목 댓글" [level=2] [ref=e84]
+          - generic [ref=e85]:
+            - button "주목 댓글 3건" [expanded] [ref=e86] [cursor=pointer]:
+              - generic [ref=e87]: 주목 댓글 3건
+              - generic [ref=e88]: ▾
+            - list [ref=e90]:
+              - listitem [ref=e91]:
+                - blockquote [ref=e92]: 정말 유익한 영상이었어요!
+                - generic [ref=e93]:
+                  - generic [ref=e94]: 사용자1 · 핵심 긍정 피드백을 대표
+                  - link "YouTube에서 보기" [ref=e95] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+              - listitem [ref=e96]:
+                - blockquote [ref=e97]: 편집이 너무 빨라요.
+                - generic [ref=e98]:
+                  - generic [ref=e99]: 사용자2 · 편집 속도 개선 요청 대표
+                  - link "YouTube에서 보기" [ref=e100] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+              - listitem [ref=e101]:
+                - blockquote [ref=e102]: 음성이 잘 안 들립니다.
+                - generic [ref=e103]:
+                  - generic [ref=e104]: 사용자3 · 음성 품질 이슈 제기
+                  - link "YouTube에서 보기" [ref=e105] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=dQw4w9WgXcQ
+    - complementary [ref=e106]:
+      - complementary "분석 기록" [ref=e107]:
+        - heading "분석 기록" [level=2] [ref=e108]
+        - list [ref=e109]:
+          - listitem [ref=e110]:
+            - button "테스트 영상 제목 방금 전" [ref=e111] [cursor=pointer]:
+              - generic [ref=e112]:
+                - paragraph [ref=e113]: 테스트 영상 제목
+                - paragraph [ref=e114]: 방금 전
+            - button "테스트 영상 제목 기록 삭제" [ref=e115] [cursor=pointer]:
+              - img [ref=e116]
+    - region "알림"
+  - button "Open Next.js Dev Tools" [ref=e124] [cursor=pointer]:
+    - img [ref=e125]
+  - alert [ref=e128]

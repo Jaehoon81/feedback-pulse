@@ -13,6 +13,7 @@ import { useRef, useState, type ChangeEvent, type ClipboardEvent, type FormEvent
 
 import { ErrorCard, type ErrorCardCode } from './ErrorCard';
 import { showToast } from '@/lib/toast';
+import type { Report } from '@/types/report';
 
 const CLIENT_TIMEOUT_MS = 65_000;
 
@@ -26,7 +27,7 @@ type FormState =
   | { kind: 'error'; code: ErrorCardCode; message?: string };
 
 interface UrlFormProps {
-  onSuccess: (reportId: string) => void;
+  onSuccess: (report: Report) => void;
 }
 
 export function UrlForm({ onSuccess }: UrlFormProps): JSX.Element {
@@ -85,10 +86,10 @@ export function UrlForm({ onSuccess }: UrlFormProps): JSX.Element {
       });
 
       if (res.ok) {
-        const data = (await res.json()) as { report: { id: string } };
+        const data = (await res.json()) as { report: Report };
         setUrl('');
         setState({ kind: 'idle' });
-        onSuccess(data.report.id);
+        onSuccess(data.report);
         return;
       }
 
