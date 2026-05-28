@@ -7,7 +7,8 @@
       "name": "project-setup",
       "status": "completed",
       "started_at": "2026-05-28T11:36:42+0900",
-      "summary": "Next.js 15 + TS strict + Tailwind + Vitest 스캐폴드 완료, src/ 골격 생성"
+      "summary": "Next.js 15 + TS strict + Tailwind + Vitest 스캐폴드 완료, src/ 골격 생성",
+      "completed_at": "2026-05-28T11:42:33+0900"
     },
     {
       "step": 1,
