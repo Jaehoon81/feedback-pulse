@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 // ADR-021: 다크모드는 3-way(system/light/dark). hydration 전 inline script로 적용해 FOUC 방지.
-const themeInitScript = `(function(){try{var s=localStorage.getItem('feedback-pulse.theme');var t=(s==='light'||s==='dark')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.classList.toggle('dark',t==='dark');}catch(e){}})();`;
+const themeInitScript = `(function(){try{var s=localStorage.getItem('feedback-pulse:theme:v1');var t=(s==='light'||s==='dark')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.classList.toggle('dark',t==='dark');}catch(e){}})();`;
 
 export default function RootLayout({
   children,

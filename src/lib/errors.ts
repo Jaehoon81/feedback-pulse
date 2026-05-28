@@ -1,53 +1,47 @@
 /**
- * 도메인 에러 5종 (ADR-005).
- * 각 에러는 사용자에게 보여줄 수 있는 한국어 `message`와
- * 클라이언트 분기용 `code` literal을 가진다.
- * HTTP 상태 매핑은 Route Handler 책임이며 본 파일은 관여하지 않는다.
+ * 도메인 에러 5종 (ADR-005, ARCHITECTURE.md "에러 핸들링 상세").
+ * Route Handler는 `e instanceof AppError`로 일괄 catch 후
+ * `{ code, message }` 본문 + `httpStatus` 상태로 응답한다.
  */
 
 export type DomainErrorCode =
-  | 'INVALID_URL'
-  | 'VIDEO_NOT_FOUND'
-  | 'COMMENTS_DISABLED'
-  | 'QUOTA_EXCEEDED'
-  | 'ANALYSIS_FAILED';
+  | 'InvalidUrlError'
+  | 'VideoNotFoundError'
+  | 'CommentsDisabledError'
+  | 'QuotaExceededError'
+  | 'AnalysisFailedError';
 
-export class InvalidUrlError extends Error {
-  readonly code = 'INVALID_URL' as const;
-  constructor(message: string) {
+export abstract class AppError extends Error {
+  abstract readonly code: DomainErrorCode;
+  abstract readonly httpStatus: number;
+
+  constructor(message: string, public readonly cause?: unknown) {
     super(message);
-    this.name = 'InvalidUrlError';
+    this.name = this.constructor.name;
   }
 }
 
-export class VideoNotFoundError extends Error {
-  readonly code = 'VIDEO_NOT_FOUND' as const;
-  constructor(message: string) {
-    super(message);
-    this.name = 'VideoNotFoundError';
-  }
+export class InvalidUrlError extends AppError {
+  readonly code = 'InvalidUrlError' as const;
+  readonly httpStatus = 400;
 }
 
-export class CommentsDisabledError extends Error {
-  readonly code = 'COMMENTS_DISABLED' as const;
-  constructor(message: string) {
-    super(message);
-    this.name = 'CommentsDisabledError';
-  }
+export class VideoNotFoundError extends AppError {
+  readonly code = 'VideoNotFoundError' as const;
+  readonly httpStatus = 404;
 }
 
-export class QuotaExceededError extends Error {
-  readonly code = 'QUOTA_EXCEEDED' as const;
-  constructor(message: string) {
-    super(message);
-    this.name = 'QuotaExceededError';
-  }
+export class CommentsDisabledError extends AppError {
+  readonly code = 'CommentsDisabledError' as const;
+  readonly httpStatus = 422;
 }
 
-export class AnalysisFailedError extends Error {
-  readonly code = 'ANALYSIS_FAILED' as const;
-  constructor(message: string) {
-    super(message);
-    this.name = 'AnalysisFailedError';
-  }
+export class QuotaExceededError extends AppError {
+  readonly code = 'QuotaExceededError' as const;
+  readonly httpStatus = 429;
+}
+
+export class AnalysisFailedError extends AppError {
+  readonly code = 'AnalysisFailedError' as const;
+  readonly httpStatus = 503;
 }

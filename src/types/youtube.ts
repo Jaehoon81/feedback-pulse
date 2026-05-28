@@ -16,6 +16,8 @@ export interface VideoMetadata {
   /** statistics.commentCount, null이면 0으로 정규화 */
   commentCount: number;
   viewCount: number;
+  /** statistics.likeCount, null이면 0으로 정규화 (Gemini 프롬프트에 사용) */
+  likeCount: number;
 }
 
 export interface Comment {
