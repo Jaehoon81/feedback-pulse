@@ -32,10 +32,13 @@
     {
       "step": 3,
       "name": "api-route-impl",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         2
-      ]
+      ],
+      "started_at": "2026-05-28T14:29:10+0900",
+      "completed_at": "2026-05-28T14:33:30+0900",
+      "summary": "app/api/analyze/route.ts POST 구현, maxDuration 60 + AppError 일괄 catch(duck-typing, vitest resetModules 대응) + PascalCase code + no-store, step 2 테스트 통과(99/99), build/lint 통과"
     },
     {
       "step": 4,
