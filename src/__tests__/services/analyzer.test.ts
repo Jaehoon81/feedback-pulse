@@ -272,6 +272,22 @@ describe('analyzeComments — SDK 에러는 AnalysisFailedError로 wrap', () => 
       analyzeComments(client, FAKE_VIDEO, makeComments(10)),
     ).rejects.toBeInstanceOf(AnalysisFailedError);
   });
+
+  it('finishReason !== "STOP" (예: MAX_TOKENS, SAFETY) → AnalysisFailedError', async () => {
+    // ARCH "Gemini API → 도메인 에러 매핑" — 부분/필터링 응답은 JSON 파싱이
+    // 우연히 성공해도 결과 신뢰 불가, 사전 차단.
+    const client = {
+      models: {
+        generateContent: vi.fn().mockResolvedValue({
+          text: JSON.stringify(makeValidPayload()),
+          candidates: [{ finishReason: 'MAX_TOKENS' }],
+        }),
+      },
+    } as unknown as GoogleGenAI;
+    await expect(
+      analyzeComments(client, FAKE_VIDEO, makeComments(10)),
+    ).rejects.toBeInstanceOf(AnalysisFailedError);
+  });
 });
 
 // ────────────────────────────────────────────────────────────────────────────

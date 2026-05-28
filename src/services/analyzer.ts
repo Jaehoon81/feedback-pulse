@@ -128,7 +128,7 @@ export async function analyzeComments(
 ): Promise<Report> {
   const prompt = buildUserPrompt(video, comments);
 
-  let raw: { text?: string };
+  let raw: { text?: string; candidates?: Array<{ finishReason?: string }> };
   try {
     raw = await withTimeout(
       client.models.generateContent({
@@ -147,6 +147,16 @@ export async function analyzeComments(
     throw new AnalysisFailedError(
       `Gemini SDK 에러: ${err instanceof Error ? err.message : String(err)}`,
       err,
+    );
+  }
+
+  // ARCH "Gemini API → 도메인 에러 매핑": finishReason이 명시되어 있고 STOP이 아니면
+  // (MAX_TOKENS / SAFETY / RECITATION 등) 부분/필터링된 응답이므로 즉시 실패 처리.
+  // 응답 shape가 finishReason을 포함하지 않는 경로는 통과(테스트 모킹/구버전 호환).
+  const finishReason = raw?.candidates?.[0]?.finishReason;
+  if (finishReason && finishReason !== 'STOP') {
+    throw new AnalysisFailedError(
+      `Gemini 응답이 정상 종료되지 않았습니다 (finishReason=${finishReason}).`,
     );
   }
 
