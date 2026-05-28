@@ -1,0 +1,21 @@
+{
+  "kind": "youtube#commentThreadListResponse",
+  "items": [
+    {
+      "kind": "youtube#commentThread",
+      "id": "thread_003",
+      "snippet": {
+        "topLevelComment": {
+          "kind": "youtube#comment",
+          "id": "thread_003",
+          "snippet": {
+            "textDisplay": "Final page comment",
+            "authorDisplayName": "Carol",
+            "likeCount": 0,
+            "publishedAt": "2026-01-13T08:30:00Z"
+          }
+        }
+      }
+    }
+  ]
+}

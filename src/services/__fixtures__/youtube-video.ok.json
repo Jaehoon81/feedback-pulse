@@ -1,0 +1,24 @@
+{
+  "kind": "youtube#videoListResponse",
+  "items": [
+    {
+      "kind": "youtube#video",
+      "id": "FAKE_VIDEO1",
+      "snippet": {
+        "publishedAt": "2026-01-15T10:00:00Z",
+        "channelTitle": "Test Channel",
+        "title": "Test Video Title",
+        "thumbnails": {
+          "default": { "url": "https://i.ytimg.com/vi/FAKE_VIDEO1/default.jpg" },
+          "medium": { "url": "https://i.ytimg.com/vi/FAKE_VIDEO1/mqdefault.jpg" },
+          "high": { "url": "https://i.ytimg.com/vi/FAKE_VIDEO1/hqdefault.jpg" }
+        }
+      },
+      "statistics": {
+        "viewCount": "12345",
+        "likeCount": "678",
+        "commentCount": "150"
+      }
+    }
+  ]
+}
