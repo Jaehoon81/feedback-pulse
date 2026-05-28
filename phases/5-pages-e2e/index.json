@@ -35,10 +35,13 @@
     {
       "step": 3,
       "name": "home-page",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         2
-      ]
+      ],
+      "started_at": "2026-05-28T15:32:46+0900",
+      "summary": "app/page.tsx 홈 페이지 ('use client', UrlForm + HistorySidebar + ToastViewport) + UrlForm onSuccess 시그니처 보강(Report 객체 전달) + createStorage 경유 addReport → router.push(/report/{id}), smoke test 3 케이스 추가, 총 171 tests 통과, build/lint 통과.",
+      "completed_at": "2026-05-28T15:37:50+0900"
     },
     {
       "step": 4,
