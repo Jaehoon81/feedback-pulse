@@ -361,6 +361,8 @@ auto-dismiss: setTimeout, 호버 시 일시정지
 
 ## 모바일 사이드바 Drawer
 
+> **MVP 미구현 (ADR-027)**: 햄버거 아이콘 + Drawer 슬라이드인은 미구현. 모바일에서는 `HistorySidebar`가 main grid(`grid-cols-1 md:grid-cols-[1fr_320px]`)의 두 번째 행으로 자연 노출되며, 사용자는 스크롤로 접근한다. 아래 명세는 향후 polish 단계 작업 기준이다.
+
 - **트리거**: 헤더 좌측 햄버거 아이콘 (`w-5 h-5`)
 - **열림**: 좌측에서 슬라이드인 — `translate-x-full → translate-x-0`, `transition-transform duration-200 ease-out`
 - **배경 overlay**: `bg-black/40`, 클릭하면 닫힘
@@ -369,6 +371,8 @@ auto-dismiss: setTimeout, 호버 시 일시정지
 - 데스크톱(`≥1024px`)에서는 drawer 대신 항상 노출되는 사이드바
 
 ## 리포트 내 네비게이션 (옵션)
+
+> **MVP 미구현 (ADR-027)**: sticky anchor 네비는 명세상 옵션이며 MVP에는 포함되지 않는다. 본문은 정상 세로 스크롤만 지원. 평균 리포트 길이 + 사용자 피드백 확인 후 도입 검토.
 
 - 데스크톱 **`≥1280px`에서만**: 우측 sticky anchor 링크 6개 (요약 / 감성 / 주제 / 강점 / 개선점 / 주목 댓글)
 - 클릭 시 `scroll-behavior: smooth`로 해당 섹션으로 스크롤

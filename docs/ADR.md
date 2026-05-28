@@ -134,3 +134,23 @@ MVP 속도 최우선. 외부 의존성 최소화. 작동하는 최소 구현을 
 **결정**: 배포 타깃은 **Vercel Hobby (Free) 플랜**으로 고정. Route Handler `export const maxDuration = 60`. `next.config.js`에서 `output: 'export'` / `output: 'standalone'` 등 비기본 빌드 모드 **사용 금지** (Vercel 기본 서버리스 빌드만 허용).
 **이유**: 1인 MVP의 운영 비용 $0 유지 (Gemini 무료 티어 + Vercel Hobby Free 조합으로 LLM/배포 모두 $0). Hobby 60초 한도 안에서 댓글 200개(ADR-004 갱신) + LLM 분석(Gemini 2.5 Pro 1차 / Claude Sonnet 4.6 fallback, ADR-011)이 충분히 완료. `output: 'export'`는 Route Handler와 양립 불가능(정적 export는 동적 서버 함수 미지원) — 미래 회귀 방지로 명시 금지. 동적 라우트 `/report/[id]`는 Vercel 서버리스 + CSR(ADR-016) 조합으로 정상 동작.
 **트레이드오프**: 사용량이 늘어 Hobby 한도(100k invocations/일, 100GB bandwidth/월, 6,000 build-min/월) 초과 시 Pro 업그레이드 필요. 댓글 500개 분석은 불가능 (200개 한도). 빌드 모드 잠금으로 정적 hosting(예: GitHub Pages) 배포는 불가.
+
+### ADR-027: MVP UI 단순화 — 모바일 햄버거/Drawer 미구현 + sticky 네비 보류 + 헤더 통합 변형
+**결정**: ARCH 와이어프레임의 다음 UI 요소를 MVP에서 **단순화 변형**으로 채택한다 (2026-05-28).
+1. **모바일 햄버거 메뉴 + Drawer 미구현** → 모바일에서 사이드바(`HistorySidebar`)는 main grid의 두 번째 행으로 자연 노출 (Tailwind `grid-cols-1 md:grid-cols-[1fr_320px]`). 사용자는 스크롤로 접근 가능.
+2. **데스크톱(≥1280px) sticky anchor 네비 미구현** → ReportView 본문은 정상 스크롤만 지원. 6 섹션 네비 UI 부재.
+3. **헤더 통합(다운로드/복사/테마 토글 묶기) 부분 변형** → 사이트 헤더(`layout.tsx`)는 좌측 로고 + 우측 ThemeToggle만. 다운로드/복사는 본문 상단 `ReportActions` 컴포넌트에 위치 (리포트 페이지에만 노출).
+
+**이유**:
+- 모바일 햄버거 + Drawer 실 구현은 사이드바를 layout으로 끌어올리거나 React context로 페이지 단위 state 통신해야 해 코드 복잡도가 크다. MVP 핵심 흐름(URL 입력 → 분석 → 리포트 → 다운로드/복사)은 현재 변형으로도 모두 작동하며 사용자 신뢰 흐름엔 영향이 없다.
+- sticky anchor 네비는 ARCH L883과 UI_GUIDE L371-376 모두 "옵션"으로 표기. IntersectionObserver + 우측 fixed nav 구현은 polish 단계 작업.
+- 헤더에 ReportActions를 묶는 변형은 시각 정돈 이슈일 뿐 기능은 모두 본문 ReportActions에서 동일하게 제공된다. ARCH 와이어프레임은 시각 가이드 (구속력 없는 컨셉).
+
+**트레이드오프**:
+- 모바일 사용자가 사이드바 진입 시 스크롤이 길어진다 (특히 리포트 페이지). 햄버거 메뉴의 즉시 접근성에 비해 UX 떨어짐.
+- sticky 네비 부재로 긴 리포트에서 섹션 이동에 스크롤 의존.
+- 헤더가 빈약해 보일 수 있음 (로고 + 토글 2개만).
+
+**전환 조건**: 모바일 사용 비중 ≥ 50% 또는 사용자 피드백에 햄버거 요구 누적 시 폐기 + Drawer 구현. sticky 네비는 평균 리포트 길이가 6 섹션 풀 분량 자주 도달할 때 도입.
+
+**관련 참조**: ARCH L813-832 (홈 와이어프레임), ARCH L846-877 (리포트 와이어프레임), ARCH L883 (sticky 네비 옵션), UI_GUIDE L364-365 (햄버거 명세).
