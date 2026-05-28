@@ -2,10 +2,49 @@
   "project": "feedback-pulse",
   "phase": "0-foundation",
   "steps": [
-    { "step": 0, "name": "project-setup", "status": "pending" },
-    { "step": 1, "name": "core-types", "status": "pending", "depends_on": [0] },
-    { "step": 2, "name": "lib-errors", "status": "pending", "depends_on": [0, 1] },
-    { "step": 3, "name": "app-shell", "status": "pending", "depends_on": [0] },
-    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
-  ]
+    {
+      "step": 0,
+      "name": "project-setup",
+      "status": "completed",
+      "started_at": "2026-05-28T11:36:42+0900",
+      "summary": "Next.js 15 + TS strict + Tailwind + Vitest 스캐폴드 완료, src/ 골격 생성"
+    },
+    {
+      "step": 1,
+      "name": "core-types",
+      "status": "pending",
+      "depends_on": [
+        0
+      ]
+    },
+    {
+      "step": 2,
+      "name": "lib-errors",
+      "status": "pending",
+      "depends_on": [
+        0,
+        1
+      ]
+    },
+    {
+      "step": 3,
+      "name": "app-shell",
+      "status": "pending",
+      "depends_on": [
+        0
+      ]
+    },
+    {
+      "step": 4,
+      "name": "phase-review",
+      "status": "pending",
+      "depends_on": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "created_at": "2026-05-28T11:36:42+0900"
 }
