@@ -50,7 +50,7 @@
       ],
       "started_at": "2026-05-28T15:01:24+0900",
       "summary": "UrlForm 5상태 머신 + onPaste + 65s 타임아웃 + AbortController, smoke test 5 통과 (전체 146 통과)",
-      "completed_at": "2026-05-28T15:05:30+0900"
+      "completed_at": "2026-05-28T15:06:08+0900"
     },
     {
       "step": 5,
