@@ -47,13 +47,16 @@
     {
       "step": 4,
       "name": "phase-review",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         0,
         1,
         2,
         3
-      ]
+      ],
+      "started_at": "2026-05-28T11:51:22+0900",
+      "summary": "체크리스트 7항목 점검 / H 4건 발견·fix(layout.tsx theme 키 ':v1', errors.ts AppError 베이스+httpStatus+code='ClassName', VideoMetadata.likeCount 추가, report.ts 재작성: Sentiment union·TopicTag·FeedbackItem·NotableComment.text) + M 1건 보고(Pretendard CDN — woff2 인프라 추가 시 fix). lint/build/test 6 tests 통과.",
+      "completed_at": "2026-05-28T11:57:41+0900"
     }
   ],
   "created_at": "2026-05-28T11:36:42+0900"
