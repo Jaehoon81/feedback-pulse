@@ -52,7 +52,7 @@
       ],
       "started_at": "2026-05-28T15:39:11+0900",
       "summary": "app/report/[id]/page.tsx CSR 리포트 페이지 ('use client', useParams + useRouter, loading/found/not-found 3상태, ErrorCard + 명시적 '홈으로 이동' 버튼), smoke test 3 케이스, 총 174 tests 통과, build/lint 통과 (동적 라우트 ƒ 정상 인식).",
-      "completed_at": "2026-05-28T15:41:50+0900"
+      "completed_at": "2026-05-28T15:42:58+0900"
     },
     {
       "step": 5,
