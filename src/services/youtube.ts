@@ -40,8 +40,10 @@ export async function fetchVideoMetadata(
   if (response.status === 404) {
     throw new VideoNotFoundError('영상을 찾을 수 없습니다.');
   }
+  // 5xx 등 그 외 not-ok는 generic Error로 상위에 위임 (route handler/retry에서 AnalysisFailedError로 일반화).
+  // fetchTopComments와 동일한 패턴 (ARCHITECTURE.md "YouTube API → 도메인 에러 매핑").
   if (!response.ok) {
-    throw new VideoNotFoundError('영상을 찾을 수 없습니다.');
+    throw new Error(`YouTube API error: ${response.status}`);
   }
 
   const data = await response.json();
