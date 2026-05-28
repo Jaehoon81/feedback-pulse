@@ -2,12 +2,64 @@
   "project": "feedback-pulse",
   "phase": "4-ui-components",
   "steps": [
-    { "step": 0, "name": "lib-toast-tests", "status": "pending" },
-    { "step": 1, "name": "lib-toast-impl", "status": "pending", "depends_on": [0] },
-    { "step": 2, "name": "ui-primitives", "status": "pending" },
-    { "step": 3, "name": "ui-toast-error-card", "status": "pending", "depends_on": [1, 2] },
-    { "step": 4, "name": "ui-urlform", "status": "pending", "depends_on": [2] },
-    { "step": 5, "name": "ui-report-parts", "status": "pending", "depends_on": [2] },
-    { "step": 6, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3, 4, 5] }
-  ]
+    {
+      "step": 0,
+      "name": "lib-toast-tests",
+      "status": "completed",
+      "started_at": "2026-05-28T14:45:37+0900",
+      "summary": "lib/toast.ts 테스트 16 케이스 (CRUD 6 + cap 3 / 2 + subscribe 6 + 중복·격리 2), @/lib/toast 미존재로 fail(의도)"
+    },
+    {
+      "step": 1,
+      "name": "lib-toast-impl",
+      "status": "pending",
+      "depends_on": [
+        0
+      ]
+    },
+    {
+      "step": 2,
+      "name": "ui-primitives",
+      "status": "pending"
+    },
+    {
+      "step": 3,
+      "name": "ui-toast-error-card",
+      "status": "pending",
+      "depends_on": [
+        1,
+        2
+      ]
+    },
+    {
+      "step": 4,
+      "name": "ui-urlform",
+      "status": "pending",
+      "depends_on": [
+        2
+      ]
+    },
+    {
+      "step": 5,
+      "name": "ui-report-parts",
+      "status": "pending",
+      "depends_on": [
+        2
+      ]
+    },
+    {
+      "step": 6,
+      "name": "phase-review",
+      "status": "pending",
+      "depends_on": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  ],
+  "created_at": "2026-05-28T14:45:37+0900"
 }
