@@ -7,7 +7,8 @@
     },
     {
       "dir": "1-youtube-service",
-      "status": "pending"
+      "status": "completed",
+      "completed_at": "2026-05-28T13:28:29+0900"
     },
     {
       "dir": "2-analyzer",
