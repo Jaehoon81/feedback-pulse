@@ -348,16 +348,18 @@ class StepExecutor:
             out_path.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
             return output
 
-        cmd = ["claude", "-p", "--dangerously-skip-permissions", "--output-format", "json", prompt]
+        # prompt를 stdin으로 전달 — Windows CreateProcess 명령줄 길이 한계(32KB) 회피
+        cmd = ["claude", "-p", "--dangerously-skip-permissions", "--output-format", "json"]
         env = self._sanitized_env()
         timeout = self._step_timeout(step)
 
         if self._verbose:
-            result = self._run_with_stream(cmd, env, timeout)
+            result = self._run_with_stream(cmd, env, timeout, stdin_input=prompt)
         else:
             result = subprocess.run(cmd, cwd=self._root, capture_output=True, text=True,
                                     timeout=timeout, env=env,
-                                    encoding="utf-8", errors="replace")
+                                    encoding="utf-8", errors="replace",
+                                    input=prompt)
 
         if result.returncode != 0:
             print(f"\n  WARN: Claude가 비정상 종료됨 (code {result.returncode})")
@@ -375,13 +377,17 @@ class StepExecutor:
         out_path.write_text(json.dumps(output, indent=2, ensure_ascii=False), encoding="utf-8")
         return output
 
-    def _run_with_stream(self, cmd: list, env: dict, timeout: int):
+    def _run_with_stream(self, cmd: list, env: dict, timeout: int, stdin_input: str = None):
         """verbose 모드: stderr/stdout를 줄 단위로 터미널에 흘려보내며 동시에 버퍼링.
         progress_indicator의 spinner를 덮지 않도록 줄바꿈 prefix 사용."""
         proc = subprocess.Popen(cmd, cwd=self._root, env=env,
+                                stdin=subprocess.PIPE if stdin_input is not None else None,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 text=True, bufsize=1,
                                 encoding="utf-8", errors="replace")
+        if stdin_input is not None:
+            proc.stdin.write(stdin_input)
+            proc.stdin.close()
         stdout_buf: list = []
         stderr_buf: list = []
 

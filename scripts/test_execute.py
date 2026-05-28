@@ -451,12 +451,15 @@ class TestInvokeClaude:
             output = executor._invoke_claude(step, preamble)
 
         cmd = mock_run.call_args[0][0]
+        kwargs = mock_run.call_args[1]
         assert cmd[0] == "claude"
         assert "-p" in cmd
         assert "--dangerously-skip-permissions" in cmd
         assert "--output-format" in cmd
-        assert "PREAMBLE" in cmd[-1]
-        assert "UI를 구현하세요" in cmd[-1]
+        # prompt는 stdin(input)으로 전달됨 — Windows CreateProcess 길이 한계 회피
+        stdin_input = kwargs.get("input", "")
+        assert "PREAMBLE" in stdin_input
+        assert "UI를 구현하세요" in stdin_input
 
     def test_saves_output_json(self, executor):
         mock_result = MagicMock(returncode=0, stdout='{"ok": true}', stderr="")
