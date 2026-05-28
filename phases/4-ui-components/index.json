@@ -2,12 +2,84 @@
   "project": "feedback-pulse",
   "phase": "4-ui-components",
   "steps": [
-    { "step": 0, "name": "lib-toast-tests", "status": "pending" },
-    { "step": 1, "name": "lib-toast-impl", "status": "pending", "depends_on": [0] },
-    { "step": 2, "name": "ui-primitives", "status": "pending" },
-    { "step": 3, "name": "ui-toast-error-card", "status": "pending", "depends_on": [1, 2] },
-    { "step": 4, "name": "ui-urlform", "status": "pending", "depends_on": [2] },
-    { "step": 5, "name": "ui-report-parts", "status": "pending", "depends_on": [2] },
-    { "step": 6, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3, 4, 5] }
-  ]
+    {
+      "step": 0,
+      "name": "lib-toast-tests",
+      "status": "completed",
+      "started_at": "2026-05-28T14:45:37+0900",
+      "summary": "lib/toast.ts 테스트 16 케이스 (CRUD 6 + cap 3 / 2 + subscribe 6 + 중복·격리 2), @/lib/toast 미존재로 fail(의도)",
+      "completed_at": "2026-05-28T14:48:25+0900"
+    },
+    {
+      "step": 1,
+      "name": "lib-toast-impl",
+      "status": "completed",
+      "depends_on": [
+        0
+      ],
+      "started_at": "2026-05-28T14:48:26+0900",
+      "summary": "lib/toast.ts 단일 큐 + subscribe 구현, step 0 테스트 16건 + 전체 115건 통과",
+      "completed_at": "2026-05-28T14:51:26+0900"
+    },
+    {
+      "step": 2,
+      "name": "ui-primitives",
+      "status": "completed",
+      "started_at": "2026-05-28T14:51:26+0900",
+      "summary": "Badge/Skeleton/Dialog/Collapsible 무상태 컴포넌트 + smoke test 4종 (13건 통과, 전체 128건)",
+      "completed_at": "2026-05-28T14:57:22+0900"
+    },
+    {
+      "step": 3,
+      "name": "ui-toast-error-card",
+      "status": "completed",
+      "depends_on": [
+        1,
+        2
+      ],
+      "started_at": "2026-05-28T14:57:23+0900",
+      "summary": "Toast viewport + ErrorCard 6종 도메인 에러 매핑, smoke test 2종 통과",
+      "completed_at": "2026-05-28T15:01:23+0900"
+    },
+    {
+      "step": 4,
+      "name": "ui-urlform",
+      "status": "completed",
+      "depends_on": [
+        2
+      ],
+      "started_at": "2026-05-28T15:01:24+0900",
+      "summary": "UrlForm 5상태 머신 + onPaste + 65s 타임아웃 + AbortController, smoke test 5 통과 (전체 146 통과)",
+      "completed_at": "2026-05-28T15:06:08+0900"
+    },
+    {
+      "step": 5,
+      "name": "ui-report-parts",
+      "status": "completed",
+      "depends_on": [
+        2
+      ],
+      "started_at": "2026-05-28T15:06:09+0900",
+      "summary": "SentimentBar(CSS)/TopicTags/NotableComments/ReportView, smoke test 7건 통과 (전체 153), Recharts 의존성 0건",
+      "completed_at": "2026-05-28T15:11:57+0900"
+    },
+    {
+      "step": 6,
+      "name": "phase-review",
+      "status": "completed",
+      "depends_on": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "started_at": "2026-05-28T15:11:58+0900",
+      "summary": "체크리스트 7항목 점검 — 이슈 1건 발견(Skeleton animate-pulse, UI_GUIDE 안티패턴 위반), 동일 step 내 fix 적용(컴포넌트+테스트), lint/build/test 153 passed 재확인",
+      "completed_at": "2026-05-28T15:15:35+0900"
+    }
+  ],
+  "created_at": "2026-05-28T14:45:37+0900",
+  "completed_at": "2026-05-28T15:15:36+0900"
 }
