@@ -24,7 +24,10 @@
     {
       "step": 2,
       "name": "ui-primitives",
-      "status": "pending"
+      "status": "completed",
+      "started_at": "2026-05-28T14:51:26+0900",
+      "summary": "Badge/Skeleton/Dialog/Collapsible 무상태 컴포넌트 + smoke test 4종 (13건 통과, 전체 128건)",
+      "completed_at": "2026-05-28T14:56:43+0900"
     },
     {
       "step": 3,
