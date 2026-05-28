@@ -30,26 +30,25 @@
    - 비율 % 텍스트 함께 표시
 2. **`src/components/TopicTags.tsx`**:
    ```tsx
-   import type { Topic } from '@/types/report';
-   interface TopicTagsProps { topics: Topic[]; }
+   import type { TopicTag } from '@/types/report';
+   interface TopicTagsProps { topics: TopicTag[]; }
    export function TopicTags({ topics }: TopicTagsProps): JSX.Element;
    ```
-   - `Badge` 컴포넌트 활용해 라벨 + mentions 표시
+   - `Badge` 컴포넌트 활용해 `topic.name` + `topic.count` + `topic.sentiment` 표시 (Badge variant를 sentiment로 매핑)
    - 빈 배열 시 "추출된 주제가 없습니다." 표시
 3. **`src/components/NotableComments.tsx`**:
    ```tsx
-   import type { NotableComment, Comment } from '@/types';
+   import type { NotableComment } from '@/types/report';
    import type { VideoMetadata } from '@/types/youtube';
    interface NotableCommentsProps {
-     notable: NotableComment[];
-     comments: Comment[];        // 원본 댓글 (commentIndex로 lookup)
-     video: VideoMetadata;       // YouTube 영상 원문 링크 base
+     notable: NotableComment[];      // 각 항목에 text/author?/reason 직접 포함 (ARCH L291~296)
+     video: VideoMetadata;            // YouTube 영상 원문 링크 base
    }
-   export function NotableComments({ notable, comments, video }: NotableCommentsProps): JSX.Element;
+   export function NotableComments({ notable, video }: NotableCommentsProps): JSX.Element;
    ```
-   - 각 항목: 원본 댓글 본문 인용(`<blockquote>`) + 작성자 + reason
-   - YouTube 댓글 원문 링크 (ADR-023): `https://www.youtube.com/watch?v={videoId}&lc={commentId}` — 새 탭 + `rel="noopener noreferrer"`
-   - `commentIndex`로 `comments[idx]` lookup, 없으면 "(원본 댓글을 찾을 수 없음)" 표시
+   - 각 항목: `nc.text`를 그대로 `<blockquote>`로 인용 + `nc.author`(있을 때) + `nc.reason`
+   - YouTube 영상 페이지 링크 (ADR-023): `https://www.youtube.com/watch?v={video.id}` — 새 탭 + `rel="noopener noreferrer"`. 댓글별 deep link(`&lc=...`)는 ARCH가 commentId를 별도로 보관 안 하므로 본 컴포넌트에서는 영상 단위 링크만.
+   - `comments` 배열 lookup 코드 작성 금지 — `nc.text`가 직접 포함되어 있다.
 4. **`src/components/ReportView.tsx`** — 위 3개 + Collapsible로 조합:
    ```tsx
    import type { Report } from '@/types/report';

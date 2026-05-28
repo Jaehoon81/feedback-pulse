@@ -37,7 +37,7 @@
 2. **동작 명세**:
    - **입력란**: `<input type="url">` 단일, placeholder = "YouTube 영상 URL을 붙여넣어 주세요" — `onChange`로 trim
    - **onPaste 자동 trim**: 붙여넣기 시 즉시 `e.clipboardData.getData('text').trim()` 적용
-   - **클라이언트 검증** (정규식): URL이 youtube.com/youtu.be 형태인지 사전 검사 — 아니면 `validating` → `error: INVALID_URL`로
+   - **클라이언트 검증** (정규식): URL이 youtube.com/youtu.be 형태인지 사전 검사 — 아니면 `validating` → `error: 'InvalidUrlError'`로 (PascalCase, ARCH L137)
    - **제출** (`onSubmit`):
      - `AbortController` 생성, state = `submitting`
      - `fetch('/api/analyze', { method: 'POST', body: JSON.stringify({ url }), signal: controller.signal })`

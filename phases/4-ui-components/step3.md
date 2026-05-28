@@ -60,19 +60,20 @@
    import type { DomainErrorCode } from '@/lib/errors';
 
    interface ErrorCardProps {
-     code: DomainErrorCode | 'INTERNAL_ERROR';
+     // PascalCase — ARCH L137 응답 형식과 일관 (5종 도메인 + InternalError fallback)
+     code: DomainErrorCode | 'InternalError';
      message?: string;        // 서버 응답 message
      onRetry?: () => void;    // 재시도 가능 시
    }
    export function ErrorCard({ code, message, onRetry }: ErrorCardProps): JSX.Element;
    ```
-   - 도메인 에러 5종 + INTERNAL_ERROR 각각의 한국어 사용자 메시지 + 추천 액션:
-     - `INVALID_URL` — "YouTube 영상 URL을 다시 확인해 주세요." (재시도 X, URL 수정 유도)
-     - `VIDEO_NOT_FOUND` — "영상을 찾을 수 없습니다. 비공개이거나 삭제된 영상일 수 있어요."
-     - `COMMENTS_DISABLED` — "이 영상은 댓글이 비활성화되어 분석이 불가능합니다."
-     - `QUOTA_EXCEEDED` — "오늘의 분석 한도를 모두 사용했어요. 내일 다시 시도해 주세요." (재시도 X)
-     - `ANALYSIS_FAILED` — "분석에 실패했습니다. 잠시 후 다시 시도해 주세요." (재시도 O)
-     - `INTERNAL_ERROR` — "예기치 못한 오류입니다. 잠시 후 다시 시도해 주세요." (재시도 O)
+   - 도메인 에러 5종 + InternalError 각각의 한국어 사용자 메시지 + 추천 액션:
+     - `InvalidUrlError` — "YouTube 영상 URL을 다시 확인해 주세요." (재시도 X, URL 수정 유도)
+     - `VideoNotFoundError` — "영상을 찾을 수 없습니다. 비공개이거나 삭제된 영상일 수 있어요."
+     - `CommentsDisabledError` — "이 영상은 댓글이 비활성화되어 분석이 불가능합니다."
+     - `QuotaExceededError` — "오늘의 분석 한도를 모두 사용했어요. 내일 다시 시도해 주세요." (재시도 X)
+     - `AnalysisFailedError` — "분석에 실패했습니다. 잠시 후 다시 시도해 주세요." (재시도 O)
+     - `InternalError` — "예기치 못한 오류입니다. 잠시 후 다시 시도해 주세요." (재시도 O)
    - `onRetry`가 제공된 경우만 `<button>재시도</button>` 표시
    - Badge로 에러 코드 라벨 표시 (variant: `error` 또는 `warning`)
    - `role="alert"` + `aria-live="assertive"` (Toast보다 강조)
@@ -93,7 +94,7 @@ npm run lint
 - `npm test` smoke test 2종 모두 통과
 - `npm run build` 통과
 - `npm run lint` 통과
-- 도메인 에러 6종(5 + INTERNAL_ERROR) 모두 한국어 매핑
+- 도메인 에러 6종(5 + InternalError) 모두 한국어 매핑 (PascalCase, ARCH L137)
 - ErrorCard `role="alert"` 명시
 - ToastViewport `aria-live="polite"` 명시
 

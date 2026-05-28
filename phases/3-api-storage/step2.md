@@ -30,18 +30,18 @@
 4. **`src/app/api/analyze/route.test.ts`** 작성 (≥ 10 케이스):
    - 정상 케이스 (1건):
      - 유효한 URL → 200 + `report` 필드 (mocked services 정상 응답)
-   - 도메인 에러 5종 매핑 (5건):
-     - `InvalidUrlError` → 400 `{ code: 'INVALID_URL', message: '...' }`
-     - `VideoNotFoundError` → 404 `{ code: 'VIDEO_NOT_FOUND', message: '...' }`
-     - `CommentsDisabledError` → 422 `{ code: 'COMMENTS_DISABLED', message: '...' }`
-     - `QuotaExceededError` → 429 `{ code: 'QUOTA_EXCEEDED', message: '...' }`
-     - `AnalysisFailedError` → 503 `{ code: 'ANALYSIS_FAILED', message: '...' }`
+   - 도메인 에러 5종 매핑 (5건) — code는 클래스명과 동일한 PascalCase (ARCH L137):
+     - `InvalidUrlError` → 400 `{ code: 'InvalidUrlError', message: '...' }`
+     - `VideoNotFoundError` → 404 `{ code: 'VideoNotFoundError', message: '...' }`
+     - `CommentsDisabledError` → 422 `{ code: 'CommentsDisabledError', message: '...' }`
+     - `QuotaExceededError` → 429 `{ code: 'QuotaExceededError', message: '...' }`
+     - `AnalysisFailedError` → 503 `{ code: 'AnalysisFailedError', message: '...' }`
    - 요청 검증 (≥ 2건):
      - body 누락 → 400
      - `url` 필드 누락 → 400
      - body가 잘못된 JSON → 400
    - 예상치 못한 에러 (1건):
-     - services에서 일반 `Error` throw → 500 `{ code: 'INTERNAL_ERROR', message: '...' }`
+     - services에서 일반 `Error` throw → 500 `{ code: 'InternalError', message: '...' }` (5종 도메인 외 fallback, PascalCase 일관)
    - 캐시 헤더 (1건):
      - 성공 응답에 `Cache-Control: no-store` 헤더 포함
 5. **services 모킹 패턴**:

@@ -3,11 +3,12 @@
 ## 읽어야 할 파일
 
 - `/src/services/analyzer.test.ts` — Phase 2 step 0 산출물 (통과 대상)
-- `/src/services/analyzer.schema.ts` (있다면) — Zod 스키마
-- `/src/types/report.ts`, `/src/types/youtube.ts`
+- `/src/services/analyzer.schema.ts` (있다면) — Zod 스키마 (`GeminiPayloadSchema`)
+- `/src/types/report.ts` — `Report`, `Sentiment` (union), `TopicTag`, `FeedbackItem`, `NotableComment`
+- `/src/types/youtube.ts` — `VideoMetadata`, `Comment`
 - `/src/lib/errors.ts` — `AnalysisFailedError`
 - `/docs/ADR.md` — ADR-011(`@google/genai` + `gemini-2.5-pro`), ADR-013(Zod 재검증), ADR-018(스트리밍 미사용)
-- `/docs/ARCHITECTURE.md` — services/analyzer.ts 본문 (responseSchema, systemInstruction 패턴)
+- `/docs/ARCHITECTURE.md` — L237~297(타입 정의), L299~340(Gemini 프롬프트 명세 + responseSchema + systemInstruction)
 
 본 step은 step 0 테스트를 통과시키는 구현만 작성한다.
 
@@ -16,13 +17,16 @@
 1. **`src/services/analyzer.ts`** 구현:
    ```ts
    import { GoogleGenAI, Type } from '@google/genai';
-   import type { ReportPayload, VideoMetadata, Comment } from '@/types';
+   import { randomUUID } from 'node:crypto';
+   import type { Report } from '@/types/report';
+   import type { VideoMetadata, Comment } from '@/types/youtube';
    import { AnalysisFailedError } from '@/lib/errors';
-   import { ReportPayloadSchema } from './analyzer.schema';
+   import { GeminiPayloadSchema } from './analyzer.schema';
 
    const MODEL_ID = 'gemini-2.5-pro';
    const ANALYSIS_TIMEOUT_MS = 35_000;
 
+   // Gemini responseSchema (OpenAPI 3.0 부분집합). ARCH L342~ 명세와 일치.
    const RESPONSE_SCHEMA = {
      type: Type.OBJECT,
      properties: {
@@ -41,46 +45,60 @@
          items: {
            type: Type.OBJECT,
            properties: {
-             label: { type: Type.STRING },
-             mentions: { type: Type.INTEGER },
+             name: { type: Type.STRING },
+             count: { type: Type.INTEGER },
+             sentiment: { type: Type.STRING, enum: ['positive', 'neutral', 'negative'] },
            },
-           required: ['label', 'mentions'],
+           required: ['name', 'count', 'sentiment'],
          },
        },
-       strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-       improvements: { type: Type.ARRAY, items: { type: Type.STRING } },
+       strengths: {
+         type: Type.ARRAY,
+         items: {
+           type: Type.OBJECT,
+           properties: {
+             point: { type: Type.STRING },
+             evidence: {
+               type: Type.ARRAY,
+               items: {
+                 type: Type.OBJECT,
+                 properties: {
+                   commentIndex: { type: Type.INTEGER },
+                   text: { type: Type.STRING },
+                 },
+                 required: ['commentIndex', 'text'],
+               },
+             },
+           },
+           required: ['point', 'evidence'],
+         },
+       },
+       improvements: { /* strengths와 동일 구조 */ },
        notableComments: {
          type: Type.ARRAY,
          items: {
            type: Type.OBJECT,
            properties: {
              commentIndex: { type: Type.INTEGER },
+             text: { type: Type.STRING },
+             author: { type: Type.STRING },
              reason: { type: Type.STRING },
            },
-           required: ['commentIndex', 'reason'],
+           required: ['commentIndex', 'text', 'reason'],
          },
        },
      },
      required: ['executiveSummary', 'sentiment', 'topics', 'strengths', 'improvements', 'notableComments'],
    };
 
-   const SYSTEM_INSTRUCTION = `당신은 한국 1인 크리에이터의 YouTube 영상 시청자 반응을 분석하는 전문가입니다.
-   주어진 영상 정보와 댓글 ${'${count}'}개를 바탕으로 다음 6항목을 JSON으로 정확히 반환하세요:
-   - executiveSummary: 2~4문장 한국어 요약
-   - sentiment: positive/neutral/negative 비율 (합 = 1.0)
-   - topics: 최대 8개, 언급 횟수 mentions 포함
-   - strengths: 최대 5개 강점
-   - improvements: 최대 5개 개선점
-   - notableComments: 3~6개, commentIndex(0-based 원본 배열 인덱스) + reason
-
-   반어, 풍자, 비꼼이 있는 한국어 표현은 surface 의미가 아닌 실제 의도로 분류하세요.`;
+   // systemInstruction은 ARCH L305~318을 그대로 사용 (한국어 분석 규칙).
 
    export async function analyzeComments(
      client: GoogleGenAI,
      video: VideoMetadata,
      comments: Comment[],
-   ): Promise<ReportPayload> {
-     const prompt = buildPrompt(video, comments);
+   ): Promise<Report> {
+     const prompt = buildUserPrompt(video, comments);
      const timeoutPromise = new Promise<never>((_, reject) =>
        setTimeout(() => reject(new AnalysisFailedError('LLM 분석 타임아웃 35초 초과')), ANALYSIS_TIMEOUT_MS),
      );
@@ -110,47 +128,34 @@
      } catch {
        throw new AnalysisFailedError('Gemini 응답이 valid JSON이 아님');
      }
-     const result = ReportPayloadSchema.safeParse(parsed);
+     const result = GeminiPayloadSchema.safeParse(parsed);
      if (!result.success) {
        throw new AnalysisFailedError(`Zod 검증 실패: ${result.error.message}`);
      }
-     return result.data;
+     // commentIndex 상한 검증 (Zod는 comments.length를 모름)
+     const payload = result.data;
+     const maxIdx = comments.length - 1;
+     for (const nc of payload.notableComments) {
+       if (nc.commentIndex > maxIdx) throw new AnalysisFailedError(`notableComments[].commentIndex 범위 초과: ${nc.commentIndex} > ${maxIdx}`);
+     }
+     // services가 메타 합성 — id, createdAt, video, commentCount + 6항목 = Report
+     return {
+       id: randomUUID(),
+       createdAt: new Date().toISOString(),
+       video,
+       commentCount: comments.length,
+       ...payload,
+     };
    }
 
-   function buildPrompt(video: VideoMetadata, comments: Comment[]): string {
-     return `# 영상 정보
-   제목: ${video.title}
-   채널: ${video.channelTitle}
-
-   # 댓글 ${comments.length}개
-   ${comments.map((c, i) => `[${i}] ${c.text}`).join('\n')}`;
+   function buildUserPrompt(video: VideoMetadata, comments: Comment[]): string {
+     // ARCH L322~334 사용자 메시지 구조 그대로
+     const header = `영상 정보:\n- 제목: ${video.title}\n- 채널: ${video.channelTitle}\n- 게시일: ${video.publishedAt}\n- 조회수: ${video.viewCount}, 좋아요: ${video.likeCount}, 댓글 수: ${video.commentCount}`;
+     const body = comments.map((c, i) => `[${i}] ${c.author}: ${c.text}`).join('\n');
+     return `${header}\n\n댓글 (총 ${comments.length}개, 인덱스는 0부터):\n${body}`;
    }
    ```
-2. **`src/services/analyzer.schema.ts`** Zod 스키마 (step 0에서 일부 작성됐다면 보강):
-   ```ts
-   import { z } from 'zod';
-   export const ReportPayloadSchema = z.object({
-     executiveSummary: z.string().min(1),
-     sentiment: z.object({
-       positive: z.number().min(0).max(1),
-       neutral: z.number().min(0).max(1),
-       negative: z.number().min(0).max(1),
-     }).refine(s => Math.abs(s.positive + s.neutral + s.negative - 1.0) <= 0.05, {
-       message: 'sentiment 합이 1.0 ± 0.05 범위가 아닙니다.',
-     }),
-     topics: z.array(z.object({
-       label: z.string().min(1),
-       mentions: z.number().int().min(0),
-     })).max(8),
-     strengths: z.array(z.string()).max(5),
-     improvements: z.array(z.string()).max(5),
-     notableComments: z.array(z.object({
-       commentIndex: z.number().int().min(0),
-       reason: z.string().min(1),
-     })).min(3).max(6),
-   });
-   ```
-   - `commentIndex`의 상한(comments.length)은 analyzer.ts 안에서 추가 검사 (Zod 스키마는 comments 배열을 모름)
+2. `randomUUID`는 `node:crypto`에서 import (Node runtime). services는 server-only.
 
 ## Acceptance Criteria
 
@@ -165,6 +170,9 @@ npm run lint
 - `npm run lint` 통과
 - `package.json` `dependencies`에 `@google/genai`, `zod` 명시
 - 모델 ID `gemini-2.5-pro` literal 1건 이상 (다른 모델 ID 사용 0건)
+- 반환된 `Report`의 `id`는 uuid v4 format
+- 반환된 `Report.commentCount` === `comments.length`
+- 반환된 `Report.video`는 인자로 받은 video 그대로
 
 ## 검증 절차
 
@@ -172,12 +180,13 @@ npm run lint
 2. 아키텍처 체크리스트:
    - `client: GoogleGenAI` 인자 주입형 (process.env 미참조)
    - `MODEL_ID = 'gemini-2.5-pro'` literal 박힘
-   - `responseSchema` 6항목 모두 포함
-   - Zod `ReportPayloadSchema`가 sentiment 합 / topics ≤ 8 / strengths ≤ 5 / improvements ≤ 5 / notableComments 3~6 모두 강제
+   - `responseSchema` 6항목 ARCH L342~ 명세와 일치 (TopicTag name/count/sentiment, FeedbackItem point/evidence, NotableComment commentIndex/text/author?/reason)
+   - Zod `GeminiPayloadSchema`가 sentiment 합 / topics ≤ 8 / strengths ≤ 5 / improvements ≤ 5 / notableComments 3~6 모두 강제
    - 35초 타임아웃 명시
    - `@anthropic-ai/sdk` import 0건
+   - id/createdAt/video/commentCount 합성 후 Report 반환
 3. `phases/2-analyzer/index.json`의 step 1 업데이트:
-   - 성공 → `"status": "completed"`, `"summary": "services/analyzer.ts 구현 (gemini-2.5-pro + responseSchema + Zod 재검증 + 35s 타임아웃), step 0 테스트 12+ 통과"`
+   - 성공 → `"status": "completed"`, `"summary": "services/analyzer.ts 구현 (gemini-2.5-pro + responseSchema + Zod 재검증 + id/createdAt 합성 + 35s 타임아웃), step 0 테스트 12+ 통과"`
 
 ## 금지사항
 
@@ -187,3 +196,4 @@ npm run lint
 - `@anthropic-ai/sdk` 동시 import 금지 (ADR-011: 통째 교체 마이그레이션).
 - 모델 ID를 변수로 외부화 금지 (예: `process.env.GEMINI_MODEL`). 이유: 모델 변경은 코드 변경 + ADR 갱신을 동반.
 - 추상화 인터페이스 도입 금지 (`LLMProvider`, `Analyzer` interface 등).
+- `Promise<ReportPayload>` 반환 금지. 이유: ARCH L555 시그니처는 `Promise<Report>` — services가 메타 합성까지 책임.

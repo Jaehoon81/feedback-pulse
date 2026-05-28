@@ -49,7 +49,7 @@
        return (
          <main className="container mx-auto p-8">
            <ErrorCard
-             code="VIDEO_NOT_FOUND"
+             code="VideoNotFoundError"
              message="해당 리포트를 찾을 수 없습니다. 새로 분석해 주세요."
              onRetry={() => router.push('/')}
            />
@@ -74,7 +74,7 @@
 2. **`useParams`** + **`useRouter`** (`next/navigation`) 사용.
 3. **smoke test**:
    - `src/app/report/[id]/page.test.tsx`:
-     - 빈 storage 환경 → "VIDEO_NOT_FOUND" ErrorCard 표시 + 홈으로 이동 버튼
+     - 빈 storage 환경 → "VideoNotFoundError" ErrorCard 표시 + 홈으로 이동 버튼
      - mock storage에 id가 존재 → ReportView 렌더링 (영상 제목 등 존재 검증)
    - `next/navigation` mock 필요
 

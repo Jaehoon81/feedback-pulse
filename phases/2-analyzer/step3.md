@@ -38,7 +38,7 @@
        lines.push('(없음)');
      } else {
        for (const t of report.topics) {
-         lines.push(`- ${t.label} (언급 ${t.mentions}회)`);
+         lines.push(`- ${t.name} (언급 ${t.count}회, ${t.sentiment})`);
        }
      }
      lines.push('');
@@ -47,8 +47,11 @@
      if (report.strengths.length === 0) {
        lines.push('(없음)');
      } else {
-       for (const s of report.strengths) {
-         lines.push(`- ${s}`);
+       for (const item of report.strengths) {
+         lines.push(`- ${item.point}`);
+         for (const ev of item.evidence) {
+           lines.push(`  > ${ev.text.replace(/\n/g, '\n  > ')}`);
+         }
        }
      }
      lines.push('');
@@ -57,18 +60,21 @@
      if (report.improvements.length === 0) {
        lines.push('(없음)');
      } else {
-       for (const s of report.improvements) {
-         lines.push(`- ${s}`);
+       for (const item of report.improvements) {
+         lines.push(`- ${item.point}`);
+         for (const ev of item.evidence) {
+           lines.push(`  > ${ev.text.replace(/\n/g, '\n  > ')}`);
+         }
        }
      }
      lines.push('');
 
      lines.push('## 주목 댓글');
      for (const nc of report.notableComments) {
-       const original = report.comments[nc.commentIndex];
-       const text = original?.text ?? '(원본 댓글을 찾을 수 없음)';
-       lines.push(`> ${text.replace(/\n/g, '\n> ')}`);
-       lines.push(`— ${nc.reason}`);
+       // ARCH 명세상 NotableComment.text가 직접 포함됨 — comments 배열 lookup 불필요
+       lines.push(`> ${nc.text.replace(/\n/g, '\n> ')}`);
+       const tail = nc.author ? `— ${nc.author}: ${nc.reason}` : `— ${nc.reason}`;
+       lines.push(tail);
        lines.push('');
      }
 
@@ -115,7 +121,8 @@ npm run lint
 2. 아키텍처 체크리스트:
    - 외부 API 호출 0건, fs/clipboard 호출 0건
    - 6개 절 정해진 순서로 출력
-   - `commentIndex` 안전 가드 (`?.text ?? '...'`)
+   - TopicTag(name/count/sentiment), FeedbackItem(point + evidence), NotableComment(text/author?/reason) 모두 정확히 사용 (ARCH L237~297)
+   - `report.comments` 참조 0건 (ARCH 명세상 Report에 comments 필드 없음, NotableComment.text 직접 사용)
    - 마크다운 문법 일관 (제목 `#` / 굵게 `**` / 리스트 `-` / 인용 `>`)
 3. `phases/2-analyzer/index.json`의 step 3 업데이트:
    - 성공 → `"status": "completed"`, `"summary": "lib/markdown.ts 구현, Report → 마크다운 6절 직렬화, step 2 테스트 10+ 통과"`
