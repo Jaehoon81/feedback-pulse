@@ -2,10 +2,63 @@
   "project": "feedback-pulse",
   "phase": "0-foundation",
   "steps": [
-    { "step": 0, "name": "project-setup", "status": "pending" },
-    { "step": 1, "name": "core-types", "status": "pending", "depends_on": [0] },
-    { "step": 2, "name": "lib-errors", "status": "pending", "depends_on": [0, 1] },
-    { "step": 3, "name": "app-shell", "status": "pending", "depends_on": [0] },
-    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
-  ]
+    {
+      "step": 0,
+      "name": "project-setup",
+      "status": "completed",
+      "started_at": "2026-05-28T11:36:42+0900",
+      "summary": "Next.js 15 + TS strict + Tailwind + Vitest 스캐폴드 완료, src/ 골격 생성",
+      "completed_at": "2026-05-28T11:42:33+0900"
+    },
+    {
+      "step": 1,
+      "name": "core-types",
+      "status": "completed",
+      "depends_on": [
+        0
+      ],
+      "started_at": "2026-05-28T11:42:34+0900",
+      "summary": "types/report.ts + types/youtube.ts 정의, magic number JSDoc 표기 완료",
+      "completed_at": "2026-05-28T11:44:57+0900"
+    },
+    {
+      "step": 2,
+      "name": "lib-errors",
+      "status": "completed",
+      "depends_on": [
+        0,
+        1
+      ],
+      "started_at": "2026-05-28T11:44:58+0900",
+      "summary": "lib/errors.ts 도메인 에러 5종 + DomainErrorCode union 정의, 5 케이스 vitest 통과",
+      "completed_at": "2026-05-28T11:47:56+0900"
+    },
+    {
+      "step": 3,
+      "name": "app-shell",
+      "status": "completed",
+      "depends_on": [
+        0
+      ],
+      "started_at": "2026-05-28T11:47:57+0900",
+      "summary": "app/layout.tsx + globals.css + 다크모드 inline script(ADR-021) + Pretendard 폰트, darkMode:'class'",
+      "completed_at": "2026-05-28T11:51:21+0900"
+    },
+    {
+      "step": 4,
+      "name": "phase-review",
+      "status": "completed",
+      "depends_on": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "started_at": "2026-05-28T11:51:22+0900",
+      "summary": "체크리스트 7항목 점검 / H 4건 발견·fix(layout.tsx theme 키 ':v1', errors.ts AppError 베이스+httpStatus+code='ClassName', VideoMetadata.likeCount 추가, report.ts 재작성: Sentiment union·TopicTag·FeedbackItem·NotableComment.text) + M 1건 보고(Pretendard CDN — woff2 인프라 추가 시 fix). lint/build/test 6 tests 통과.",
+      "completed_at": "2026-05-28T11:57:41+0900"
+    }
+  ],
+  "created_at": "2026-05-28T11:36:42+0900",
+  "completed_at": "2026-05-28T11:57:43+0900"
 }
