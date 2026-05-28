@@ -35,10 +35,13 @@
     {
       "step": 3,
       "name": "markdown-impl",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         2
-      ]
+      ],
+      "started_at": "2026-05-28T14:01:17+0900",
+      "completed_at": "2026-05-28T14:03:50+0900",
+      "summary": "lib/markdown.ts 구현, Report → 마크다운 6절 직렬화 (영상 헤더/요약/감성%/주제/강점·개선점 인용/주목댓글 author·reason), 외부 의존 0, test 70건/build/lint 통과"
     },
     {
       "step": 4,
