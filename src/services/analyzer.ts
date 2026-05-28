@@ -20,8 +20,11 @@ import type { Comment, VideoMetadata } from '@/types/youtube';
 
 import { GeminiPayloadSchema } from './analyzer.schema';
 
-const MODEL_ID = 'gemini-2.5-pro';
+export const MODEL_ID = 'gemini-2.5-pro';
 const ANALYSIS_TIMEOUT_MS = 35_000;
+const RETRY_RATE_LIMIT_DELAY_MS = 2_000;
+const RATE_LIMIT_PATTERN = /\b(?:429|503|rate.?limit|overload|exceeded)\b/i;
+const ZOD_VIOLATION_MARKER = 'Gemini 응답 스키마 검증 실패';
 
 const SYSTEM_INSTRUCTION = [
   '당신은 YouTube 영상 댓글을 분석해 크리에이터에게 시청자 반응을 종합하는 분석가입니다.',
@@ -128,6 +131,30 @@ export async function analyzeComments(
 ): Promise<Report> {
   const prompt = buildUserPrompt(video, comments);
 
+  // ARCH L233-234 재시도 정책: 429/503은 2초 대기 후 1회, Zod 위반은 즉시 1회.
+  // 두 경로는 상호 배타적이고 합쳐 최대 1회만 추가 호출.
+  try {
+    return await runAnalysis(client, video, comments, prompt);
+  } catch (firstErr) {
+    if (!(firstErr instanceof AnalysisFailedError)) throw firstErr;
+    const isRateLimit = RATE_LIMIT_PATTERN.test(firstErr.message);
+    const isZodViolation = firstErr.message.includes(ZOD_VIOLATION_MARKER);
+    if (!isRateLimit && !isZodViolation) throw firstErr;
+    if (isRateLimit) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, RETRY_RATE_LIMIT_DELAY_MS),
+      );
+    }
+    return await runAnalysis(client, video, comments, prompt);
+  }
+}
+
+async function runAnalysis(
+  client: GoogleGenAI,
+  video: VideoMetadata,
+  comments: Comment[],
+  prompt: string,
+): Promise<Report> {
   let raw: { text?: string; candidates?: Array<{ finishReason?: string }> };
   try {
     raw = await withTimeout(
@@ -200,12 +227,19 @@ export async function analyzeComments(
     }
   }
 
+  // ADR-023: 인용 댓글 YouTube 원문 deep link용 — commentIndex로 원본 comment.id를 lookup.
+  const notableComments = payload.notableComments.map((nc) => ({
+    ...nc,
+    commentId: comments[nc.commentIndex]?.id,
+  }));
+
   return {
     id: randomUUID(),
     createdAt: new Date().toISOString(),
     video,
     commentCount: comments.length,
     ...payload,
+    notableComments,
   };
 }
 

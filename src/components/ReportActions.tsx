@@ -8,7 +8,7 @@
  * 단축키 글로벌 listener는 본 step 책임 아님 (over-design 방지).
  */
 
-import type { JSX } from 'react';
+import { useEffect, type JSX } from 'react';
 
 import { copyToClipboard } from '@/lib/clipboard';
 import { reportToMarkdown } from '@/lib/markdown';
@@ -20,6 +20,19 @@ interface ReportActionsProps {
 }
 
 export function ReportActions({ report }: ReportActionsProps): JSX.Element {
+  // ADR-024 단축키: Cmd/Ctrl+S → 다운로드 트리거.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent): void {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleDownload();
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleDownload는 report에 안정적으로 클로저 captured
+  }, [report]);
+
   function handleDownload(): void {
     const markdown = reportToMarkdown(report);
     const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });

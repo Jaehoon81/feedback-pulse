@@ -39,7 +39,7 @@ export const GeminiPayloadSchema = z.object({
     .array(
       z.object({
         name: z.string().min(1),
-        count: z.number().int().min(0),
+        count: z.number().int().min(1),
         sentiment: SentimentEnum,
       }),
     )

@@ -10,9 +10,13 @@
 
 import { useEffect, useState, type JSX } from 'react';
 
-import { createStorage, getBrowserStore, type Storage } from '@/lib/storage';
+import {
+  createStorage,
+  getBrowserStore,
+  type HistoryEntry,
+  type Storage,
+} from '@/lib/storage';
 import { showToast } from '@/lib/toast';
-import type { Report } from '@/types/report';
 
 interface HistorySidebarProps {
   onSelect: (id: string) => void;
@@ -21,18 +25,18 @@ interface HistorySidebarProps {
 
 export function HistorySidebar({ onSelect, activeId }: HistorySidebarProps): JSX.Element {
   const [storage, setStorage] = useState<Storage | null>(null);
-  const [reports, setReports] = useState<Report[]>([]);
+  const [entries, setEntries] = useState<HistoryEntry[]>([]);
 
   useEffect(() => {
     const s = createStorage(getBrowserStore());
     setStorage(s);
-    setReports(s.getHistory());
+    setEntries(s.listHistory());
   }, []);
 
   function handleDelete(id: string): void {
     if (!storage) return;
     storage.deleteReport(id);
-    setReports(storage.getHistory());
+    setEntries(storage.listHistory());
     showToast('기록을 삭제했습니다.', 'info');
   }
 
@@ -42,10 +46,10 @@ export function HistorySidebar({ onSelect, activeId }: HistorySidebarProps): JSX
       className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-[#141414]"
     >
       <h2 className="text-sm font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        분석 기록
+        분석 기록 <span className="ml-1 text-xs normal-case tracking-normal text-neutral-400">(최대 50건)</span>
       </h2>
 
-      {reports.length === 0 ? (
+      {entries.length === 0 ? (
         <div className="rounded-lg border border-dashed border-neutral-200 bg-neutral-50 p-6 text-center dark:border-neutral-800 dark:bg-neutral-900/50">
           <p className="text-sm text-neutral-600 dark:text-neutral-400">분석 기록이 없습니다.</p>
           <p className="mt-1 text-xs text-neutral-500">
@@ -54,13 +58,13 @@ export function HistorySidebar({ onSelect, activeId }: HistorySidebarProps): JSX
         </div>
       ) : (
         <ul className="flex flex-col gap-2">
-          {reports.map((r) => {
-            const isActive = r.id === activeId;
+          {entries.map((e) => {
+            const isActive = e.id === activeId;
             return (
-              <li key={r.id} className="relative">
+              <li key={e.id} className="relative">
                 <button
                   type="button"
-                  onClick={() => onSelect(r.id)}
+                  onClick={() => onSelect(e.id)}
                   aria-current={isActive ? 'true' : undefined}
                   className={`flex w-full items-start gap-3 rounded-lg border p-3 pr-10 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:focus-visible:ring-white ${
                     isActive
@@ -68,26 +72,27 @@ export function HistorySidebar({ onSelect, activeId }: HistorySidebarProps): JSX
                       : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- next.config remotePatterns 분리 작업으로 미룸 (ReportView와 동일 컨텍스트) */}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- next/image 마이그레이션은 후속 묶음 K에서 일괄 */}
                   <img
-                    src={r.video.thumbnailUrl}
+                    src={e.thumbnailUrl}
                     alt=""
                     className="h-12 w-20 flex-shrink-0 rounded-md bg-neutral-200 object-cover dark:bg-neutral-800"
                   />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <p className="line-clamp-2 text-sm font-medium text-neutral-900 dark:text-white">
-                      {r.video.title}
+                      {isActive ? <span aria-hidden="true">★ </span> : null}
+                      {e.videoTitle}
                     </p>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                      {relativeTime(r.createdAt)}
+                      {relativeTime(e.createdAt)}
                     </p>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => handleDelete(r.id)}
-                  aria-label={`${r.video.title} 기록 삭제`}
+                  onClick={() => handleDelete(e.id)}
+                  aria-label={`${e.videoTitle} 기록 삭제`}
                   className="absolute right-2 top-2 rounded p-1.5 text-neutral-400 hover:bg-neutral-200 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:hover:bg-neutral-800 dark:hover:text-white dark:focus-visible:ring-white"
                 >
                   <svg
@@ -112,6 +117,9 @@ export function HistorySidebar({ onSelect, activeId }: HistorySidebarProps): JSX
           })}
         </ul>
       )}
+      <p className="mt-2 text-[11px] text-neutral-400 dark:text-neutral-500">
+        분석 결과는 이 기기의 브라우저에만 저장됩니다.
+      </p>
     </aside>
   );
 }

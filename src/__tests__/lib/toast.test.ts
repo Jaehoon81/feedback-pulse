@@ -79,35 +79,50 @@ describe('lib/toast — 기본 CRUD', () => {
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// 2. 큐 cap 3 (ADR-022)
+// 2. 큐 길이 1 — 즉시 교체 (ADR-022 / ARCH L750)
 
-describe('lib/toast — 큐 최대 길이 3', () => {
-  it('4건 연속 추가 시 가장 오래된 것이 제거되고 길이 3 유지', () => {
+describe('lib/toast — 큐 길이 1 (즉시 교체)', () => {
+  it('여러 건 연속 추가 시 마지막 1건만 유지', () => {
     showToast('1');
     showToast('2');
     showToast('3');
-    showToast('4');
     const toasts = getToasts();
-    expect(toasts).toHaveLength(3);
-    const messages = toasts.map((t) => t.message);
-    expect(messages).not.toContain('1');
-    expect(messages).toContain('2');
-    expect(messages).toContain('3');
-    expect(messages).toContain('4');
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].message).toBe('3');
   });
 
-  it('5건 연속 추가 시 가장 최근 3건만 남음', () => {
+  it('5건 연속 추가 시 가장 마지막 1건만 남음', () => {
     showToast('a');
     showToast('b');
     showToast('c');
     showToast('d');
     showToast('e');
     const toasts = getToasts();
-    expect(toasts).toHaveLength(3);
-    const messages = toasts.map((t) => t.message);
-    expect(messages).toEqual(expect.arrayContaining(['c', 'd', 'e']));
-    expect(messages).not.toContain('a');
-    expect(messages).not.toContain('b');
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].message).toBe('e');
+  });
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// 3. options — durationMs / action
+
+describe('lib/toast — options', () => {
+  it('options.durationMs를 지정하면 Toast.durationMs로 반영', () => {
+    showToast('quick', 'info', { durationMs: 2000 });
+    const t = getToasts()[0];
+    expect(t.durationMs).toBe(2000);
+  });
+
+  it('options 미지정 시 durationMs는 기본 5000', () => {
+    showToast('default');
+    expect(getToasts()[0].durationMs).toBe(5000);
+  });
+
+  it('options.action 지정 시 Toast.action에 반영', () => {
+    const onClick = vi.fn();
+    showToast('with action', 'info', { action: { label: '실행 취소', onClick } });
+    const t = getToasts()[0];
+    expect(t.action).toEqual({ label: '실행 취소', onClick });
   });
 });
 
@@ -186,12 +201,13 @@ describe('lib/toast — subscribe / unsubscribe', () => {
 // 4. 변종 동작
 
 describe('lib/toast — 중복 / 격리', () => {
-  it('동일 message를 여러 번 호출하면 별도 toast로 추가 (중복 제거 X)', () => {
-    showToast('same');
-    showToast('same');
+  it('동일 message를 여러 번 호출해도 큐는 항상 1건 (마지막 호출이 이전 toast를 교체)', () => {
+    const id1 = showToast('same');
+    const id2 = showToast('same');
     const toasts = getToasts();
-    expect(toasts).toHaveLength(2);
-    expect(toasts[0].id).not.toBe(toasts[1].id);
+    expect(toasts).toHaveLength(1);
+    expect(toasts[0].id).toBe(id2);
+    expect(id1).not.toBe(id2);
   });
 
   it('clearAllToasts() 호출 시 큐가 비워지고 listener도 갱신 받음', () => {

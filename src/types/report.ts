@@ -28,6 +28,8 @@ export interface TopicTag {
 export interface NotableComment {
   /** 입력 댓글 배열의 0-based 인덱스 */
   commentIndex: number;
+  /** YouTube 댓글 ID — services/analyzer가 comments[commentIndex].id로 합성 (ADR-023 deep link용) */
+  commentId?: string;
   /** 원문 그대로 옮긴 텍스트 (Gemini가 응답에 직접 포함) */
   text: string;
   author?: string;

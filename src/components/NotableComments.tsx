@@ -1,7 +1,8 @@
 /**
  * NotableComments — 주목할 만한 댓글 3~6개 카드 렌더 (UI_GUIDE 인용 스타일).
- * 영상 단위 YouTube 원문 링크는 ADR-023 ("새 탭 + rel='noopener noreferrer'"). NotableComment 자체는
- * commentId를 보관하지 않으므로 댓글 단위 deep link(`&lc=...`)는 본 컴포넌트에서 다루지 않는다.
+ *
+ * ADR-023: YouTube 원문 deep link — `?v={videoId}&lc={commentId}` 패턴.
+ * commentId가 있으면 댓글 단위 deep link, 없으면 영상 단위 fallback.
  */
 
 import type { JSX } from 'react';
@@ -24,6 +25,10 @@ export function NotableComments({ notable, video }: NotableCommentsProps): JSX.E
   }
 
   const videoUrl = `https://www.youtube.com/watch?v=${video.id}`;
+  const buildHref = (commentId?: string): string =>
+    commentId
+      ? `https://www.youtube.com/watch?v=${video.id}&lc=${commentId}`
+      : videoUrl;
 
   return (
     <ul className="flex flex-col gap-3">
@@ -41,12 +46,12 @@ export function NotableComments({ notable, video }: NotableCommentsProps): JSX.E
               {nc.reason}
             </span>
             <a
-              href={videoUrl}
+              href={buildHref(nc.commentId)}
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:hover:text-neutral-200 dark:focus-visible:ring-white"
             >
-              YouTube에서 보기
+              {nc.commentId ? '원문 댓글 보기' : 'YouTube에서 보기'}
             </a>
           </div>
         </li>

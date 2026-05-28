@@ -78,6 +78,14 @@ export default function ReportPage(): JSX.Element {
   return (
     <main className="container mx-auto grid grid-cols-1 gap-6 p-4 md:grid-cols-[1fr_320px] md:p-8">
       <section className="flex flex-col gap-6">
+        <button
+          type="button"
+          onClick={() => router.push('/')}
+          className="self-start text-sm text-neutral-500 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:hover:text-neutral-200 dark:focus-visible:ring-white"
+          aria-label="홈으로 이동"
+        >
+          ← 홈
+        </button>
         <ReportActions report={report} />
         <ReportView report={report} />
       </section>

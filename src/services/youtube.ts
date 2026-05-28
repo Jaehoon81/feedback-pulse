@@ -6,6 +6,7 @@
  */
 
 import {
+  AnalysisFailedError,
   CommentsDisabledError,
   QuotaExceededError,
   VideoNotFoundError,
@@ -18,6 +19,7 @@ const VIDEO_TIMEOUT_MS = 5_000;
 const COMMENTS_PAGE_TIMEOUT_MS = 8_000;
 const COMMENTS_PAGE_SIZE = 100;
 const DEFAULT_MAX_COMMENTS = 200;
+const RETRY_5XX_DELAY_MS = 1_000;
 
 export async function fetchVideoMetadata(
   fetchFn: typeof fetch,
@@ -29,10 +31,7 @@ export async function fetchVideoMetadata(
     `?part=snippet,statistics&id=${encodeURIComponent(videoId)}` +
     `&key=${encodeURIComponent(apiKey)}`;
 
-  const response = await withTimeout(
-    (signal) => fetchFn(url, { signal }),
-    VIDEO_TIMEOUT_MS,
-  );
+  const response = await fetchWithRetry5xx(fetchFn, url, VIDEO_TIMEOUT_MS);
 
   if (response.status === 403 && (await isQuotaExceeded(response))) {
     throw new QuotaExceededError('YouTube 일일 API 쿼터를 초과했습니다.');
@@ -40,8 +39,12 @@ export async function fetchVideoMetadata(
   if (response.status === 404) {
     throw new VideoNotFoundError('영상을 찾을 수 없습니다.');
   }
-  // 5xx 등 그 외 not-ok는 generic Error로 상위에 위임 (route handler/retry에서 AnalysisFailedError로 일반화).
-  // fetchTopComments와 동일한 패턴 (ARCHITECTURE.md "YouTube API → 도메인 에러 매핑").
+  // 5xx 재시도 후에도 실패 → AnalysisFailedError로 일반화 (ARCH L687).
+  if (response.status >= 500) {
+    throw new AnalysisFailedError(
+      `YouTube API 일시적 오류 (${response.status})`,
+    );
+  }
   if (!response.ok) {
     throw new Error(`YouTube API error: ${response.status}`);
   }
@@ -66,10 +69,7 @@ export async function fetchTopComments(
 
   while (comments.length < maxComments) {
     const url = buildCommentsUrl(apiKey, videoId, pageToken);
-    const response = await withTimeout(
-      (signal) => fetchFn(url, { signal }),
-      COMMENTS_PAGE_TIMEOUT_MS,
-    );
+    const response = await fetchWithRetry5xx(fetchFn, url, COMMENTS_PAGE_TIMEOUT_MS);
 
     if (response.status === 403) {
       const reason = await readErrorReason(response);
@@ -87,6 +87,11 @@ export async function fetchTopComments(
     }
     if (response.status === 404) {
       throw new VideoNotFoundError('영상을 찾을 수 없습니다.');
+    }
+    if (response.status >= 500) {
+      throw new AnalysisFailedError(
+        `YouTube API 일시적 오류 (${response.status})`,
+      );
     }
     if (!response.ok) {
       throw new Error(`YouTube API error: ${response.status}`);
@@ -131,6 +136,27 @@ async function withTimeout<T>(
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * YouTube API 5xx 응답에 대해 1회 재시도 (ARCH L232 — 1초 대기).
+ * 4xx 또는 정상 응답은 즉시 반환.
+ */
+async function fetchWithRetry5xx(
+  fetchFn: typeof fetch,
+  url: string,
+  timeoutMs: number,
+): Promise<Response> {
+  const first = await withTimeout(
+    (signal) => fetchFn(url, { signal }),
+    timeoutMs,
+  );
+  if (first.status < 500 || first.status >= 600) return first;
+  await new Promise((resolve) => setTimeout(resolve, RETRY_5XX_DELAY_MS));
+  return await withTimeout(
+    (signal) => fetchFn(url, { signal }),
+    timeoutMs,
+  );
 }
 
 function buildCommentsUrl(

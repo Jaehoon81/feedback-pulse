@@ -1,5 +1,4 @@
-/* ADR-019: Pretendard 가변폰트 (한글 가독성 + OS 의존 제거). CDN @import 사용. */
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css');
+/* ADR-019: Pretendard는 next/font/local로 layout.tsx에서 로드 (자체 호스팅). */
 
 @tailwind base;
 @tailwind components;
@@ -11,17 +10,42 @@
   --bg-card: #ffffff;
   --bg-input: #f5f5f5;
   --border-default: #e5e5e5;
+  color-scheme: light;
 }
 
 /* 다크모드 토큰 — html.dark 클래스 기반 (tailwind darkMode: 'class') */
+/* color-scheme: dark — 스크롤바 + form controls 자동 다크 톤 (브라우저 OS UI) */
 .dark {
   --bg-page: #0a0a0a;
   --bg-card: #141414;
   --bg-input: #0f0f0f;
   --border-default: #262626;
+  color-scheme: dark;
 }
 
 html {
-  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
-    system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-pretendard), 'Pretendard Variable', Pretendard, -apple-system,
+    BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* UI_GUIDE L196-198 — 페이지 진입 시 부드러운 fade-in. prefers-reduced-motion 시 비활성. */
+@keyframes fp-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fp-fade-in {
+  animation: fp-fade-in 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fp-fade-in {
+    animation: none;
+  }
 }

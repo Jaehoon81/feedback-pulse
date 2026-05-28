@@ -75,6 +75,69 @@ function pct(v: number): string {
   return `${Math.round(v * 100)}%`;
 }
 
+/**
+ * 섹션별 마크다운 텍스트 (ARCH L929-944 — generateSummaryText).
+ * F-08 섹션 단위 복사 버튼이 사용한다.
+ */
+export type CopySection =
+  | 'summary'
+  | 'sentiment'
+  | 'topics'
+  | 'strengths'
+  | 'improvements'
+  | 'notable'
+  | 'full';
+
+export function generateSummaryText(report: Report, section: CopySection): string {
+  switch (section) {
+    case 'summary':
+      return ['## 핵심 요약', report.executiveSummary].join('\n');
+    case 'sentiment': {
+      const s = report.sentiment;
+      return [
+        '## 감성 분포',
+        `- 긍정: ${pct(s.positive)}`,
+        `- 중립: ${pct(s.neutral)}`,
+        `- 부정: ${pct(s.negative)}`,
+      ].join('\n');
+    }
+    case 'topics': {
+      const lines = ['## 주제'];
+      if (report.topics.length === 0) lines.push('(없음)');
+      else for (const t of report.topics) lines.push(`- ${t.name} (언급 ${t.count}회, ${t.sentiment})`);
+      return lines.join('\n');
+    }
+    case 'strengths':
+      return feedbackSection('## 강점', report.strengths);
+    case 'improvements':
+      return feedbackSection('## 개선점', report.improvements);
+    case 'notable': {
+      const lines = ['## 주목 댓글'];
+      for (const nc of report.notableComments) {
+        lines.push(`> ${nc.text.replace(/\n/g, '\n> ')}`);
+        lines.push(nc.author ? `— ${nc.reason} (${nc.author})` : `— ${nc.reason}`);
+        lines.push('');
+      }
+      return lines.join('\n').trim();
+    }
+    case 'full':
+      return reportToMarkdown(report);
+  }
+}
+
+function feedbackSection(header: string, items: Report['strengths']): string {
+  const lines = [header];
+  if (items.length === 0) lines.push('(없음)');
+  else
+    for (const item of items) {
+      lines.push(`- ${item.point}`);
+      for (const ev of item.evidence) {
+        lines.push(`  > ${ev.text.replace(/\n/g, '\n  > ')}`);
+      }
+    }
+  return lines.join('\n');
+}
+
 function formatKoreanDate(iso: string): string {
   try {
     const d = new Date(iso);
