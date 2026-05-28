@@ -30,7 +30,7 @@
       ],
       "started_at": "2026-05-28T13:14:28+0900",
       "summary": "services/youtube.ts 테스트 16케이스(fetchVideoMetadata 6 + fetchTopComments 10) 작성, fake fetch 주입 + 200 cap + 5s/8s 타임아웃 + HTML 엔티티 디코딩 + 도메인 에러 3종 검증, impl 없어 import fail(의도)",
-      "completed_at": "2026-05-28T13:19:30+0900"
+      "completed_at": "2026-05-28T13:20:06+0900"
     },
     {
       "step": 3,
