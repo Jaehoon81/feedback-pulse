@@ -64,7 +64,7 @@
       "timeout_seconds": 3600,
       "started_at": "2026-05-28T15:42:59+0900",
       "summary": "Playwright MCP 4종 캡처 (홈 1440×900/390×844 × light/dark) → .artifacts/screenshots/5-pages-e2e/home/desktop-{light,dark}.png + mobile-{light,dark}.png, 캡처 시점 console error 0건 (초기 navigate 시 favicon.ico 404는 브라우저 자동 요청, 앱 로직 무관). lint/build/test(174) 통과.",
-      "completed_at": "2026-05-28T15:48:30+0900"
+      "completed_at": "2026-05-28T15:52:35+0900"
     },
     {
       "step": 6,
