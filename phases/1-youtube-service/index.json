@@ -35,10 +35,13 @@
     {
       "step": 3,
       "name": "youtube-service-impl",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         2
-      ]
+      ],
+      "started_at": "2026-05-28T13:20:07+0900",
+      "summary": "services/youtube.ts 구현, fetchFn 주입형 + 5s/8s 타임아웃 (AbortController) + 200 cap + 페이지 부족(<100) 조기 종료 + HTML 엔티티 디코딩(명명 5종 + 숫자/16진) + 도메인 에러 3종 매핑, step 2 테스트 16/16 통과",
+      "completed_at": "2026-05-28T13:23:30+0900"
     },
     {
       "step": 4,
