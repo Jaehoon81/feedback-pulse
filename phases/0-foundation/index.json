@@ -36,10 +36,13 @@
     {
       "step": 3,
       "name": "app-shell",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         0
-      ]
+      ],
+      "started_at": "2026-05-28T11:47:57+0900",
+      "summary": "app/layout.tsx + globals.css + 다크모드 inline script(ADR-021) + Pretendard 폰트, darkMode:'class'",
+      "completed_at": "2026-05-28T11:52:00+0900"
     },
     {
       "step": 4,
