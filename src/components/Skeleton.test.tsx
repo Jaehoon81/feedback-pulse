@@ -8,11 +8,11 @@ import { render } from '@testing-library/react';
 import { Skeleton } from './Skeleton';
 
 describe('Skeleton', () => {
-  it('기본 클래스에 animate-pulse와 다크모드 토큰을 포함한다', () => {
+  it('단순 무채색 박스 클래스에 다크모드 토큰을 포함한다 (펄스 애니메이션 금지)', () => {
     const { container } = render(<Skeleton />);
     const el = container.firstElementChild as HTMLElement;
     expect(el).toBeInTheDocument();
-    expect(el.className).toContain('animate-pulse');
+    expect(el.className).not.toContain('animate-pulse');
     expect(el.className).toContain('bg-neutral-200');
     expect(el.className).toContain('dark:bg-neutral-800');
     expect(el.className).toContain('rounded-md');

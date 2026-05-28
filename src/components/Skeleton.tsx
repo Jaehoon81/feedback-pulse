@@ -13,7 +13,7 @@ export function Skeleton({ className = '' }: SkeletonProps): JSX.Element {
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse rounded-md bg-neutral-200 dark:bg-neutral-800 ${className}`}
+      className={`rounded-md bg-neutral-200 dark:bg-neutral-800 ${className}`}
     />
   );
 }
