@@ -55,10 +55,13 @@
     {
       "step": 5,
       "name": "ui-report-parts",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         2
-      ]
+      ],
+      "started_at": "2026-05-28T15:06:09+0900",
+      "summary": "SentimentBar(CSS)/TopicTags/NotableComments/ReportView, smoke test 7건 통과 (전체 153), Recharts 의존성 0건",
+      "completed_at": "2026-05-28T15:11:00+0900"
     },
     {
       "step": 6,
