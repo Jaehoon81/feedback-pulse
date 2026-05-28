@@ -1,0 +1,11 @@
+{
+  "project": "feedback-pulse",
+  "phase": "3-api-storage",
+  "steps": [
+    { "step": 0, "name": "storage-tests", "status": "pending" },
+    { "step": 1, "name": "storage-impl", "status": "pending", "depends_on": [0] },
+    { "step": 2, "name": "api-route-tests", "status": "pending" },
+    { "step": 3, "name": "api-route-impl", "status": "pending", "depends_on": [2] },
+    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
+  ]
+}

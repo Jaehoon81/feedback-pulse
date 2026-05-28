@@ -1,0 +1,11 @@
+{
+  "project": "feedback-pulse",
+  "phase": "2-analyzer",
+  "steps": [
+    { "step": 0, "name": "analyzer-tests", "status": "pending" },
+    { "step": 1, "name": "analyzer-impl", "status": "pending", "depends_on": [0] },
+    { "step": 2, "name": "markdown-tests", "status": "pending", "depends_on": [1] },
+    { "step": 3, "name": "markdown-impl", "status": "pending", "depends_on": [2] },
+    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
+  ]
+}

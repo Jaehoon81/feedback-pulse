@@ -1,0 +1,13 @@
+{
+  "project": "feedback-pulse",
+  "phase": "4-ui-components",
+  "steps": [
+    { "step": 0, "name": "lib-toast-tests", "status": "pending" },
+    { "step": 1, "name": "lib-toast-impl", "status": "pending", "depends_on": [0] },
+    { "step": 2, "name": "ui-primitives", "status": "pending" },
+    { "step": 3, "name": "ui-toast-error-card", "status": "pending", "depends_on": [1, 2] },
+    { "step": 4, "name": "ui-urlform", "status": "pending", "depends_on": [2] },
+    { "step": 5, "name": "ui-report-parts", "status": "pending", "depends_on": [2] },
+    { "step": 6, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3, 4, 5] }
+  ]
+}

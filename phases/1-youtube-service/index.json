@@ -1,0 +1,11 @@
+{
+  "project": "feedback-pulse",
+  "phase": "1-youtube-service",
+  "steps": [
+    { "step": 0, "name": "url-extractor-tests", "status": "pending" },
+    { "step": 1, "name": "url-extractor-impl", "status": "pending", "depends_on": [0] },
+    { "step": 2, "name": "youtube-service-tests", "status": "pending", "depends_on": [1] },
+    { "step": 3, "name": "youtube-service-impl", "status": "pending", "depends_on": [2] },
+    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
+  ]
+}

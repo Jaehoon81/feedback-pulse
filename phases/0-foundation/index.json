@@ -1,0 +1,11 @@
+{
+  "project": "feedback-pulse",
+  "phase": "0-foundation",
+  "steps": [
+    { "step": 0, "name": "project-setup", "status": "pending" },
+    { "step": 1, "name": "core-types", "status": "pending", "depends_on": [0] },
+    { "step": 2, "name": "lib-errors", "status": "pending", "depends_on": [0, 1] },
+    { "step": 3, "name": "app-shell", "status": "pending", "depends_on": [0] },
+    { "step": 4, "name": "phase-review", "status": "pending", "depends_on": [0, 1, 2, 3] }
+  ]
+}
