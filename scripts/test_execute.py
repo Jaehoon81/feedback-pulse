@@ -838,7 +838,11 @@ class TestBuildGate:
         monkeypatch.setattr("subprocess.Popen", FakePopen)
         with patch.object(ex, "ROOT", tmp_project):
             executor._run_build_gate()
-        assert calls == [["npm", "run", "lint"], ["npm", "run", "build"], ["npm", "run", "test"]]
+        # npm은 shutil.which로 풀 경로 해석됨 (Windows .cmd wrapper 호환)
+        assert len(calls) == 3
+        for call, expected in zip(calls, [["run", "lint"], ["run", "build"], ["run", "test"]]):
+            assert call[0].lower().endswith(("npm", "npm.cmd", "npm.exe"))
+            assert call[1:] == expected
 
     def test_failure_exits_1(self, executor, tmp_project, monkeypatch):
         (tmp_project / "package.json").write_text("{}", encoding="utf-8")
@@ -878,9 +882,10 @@ class TestBuildGate:
         logs = list(log_dir.glob(f"*-{executor._phase_name}-build.log"))
         assert len(logs) == 1, f"build.log not found in {log_dir}"
         content = logs[0].read_text(encoding="utf-8")
-        assert "npm run lint" in content
-        assert "npm run build" in content
-        assert "npm run test" in content
+        # npm은 shutil.which로 풀 경로 해석되므로 "run lint" 같은 부분 매치
+        assert "run lint" in content
+        assert "run build" in content
+        assert "run test" in content
         assert "Build gate passed" in content
 
 

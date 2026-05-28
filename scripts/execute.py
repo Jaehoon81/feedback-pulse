@@ -599,9 +599,16 @@ class StepExecutor:
         date_str = datetime.now(self.TZ).strftime("%Y-%m-%d")
         log_path = log_dir / f"{date_str}-{self._phase_name}-build.log"
 
+        # Windows에서는 npm이 .cmd wrapper라 subprocess.Popen(shell=False)가 PATHEXT 검색을 안 함.
+        # shutil.which로 풀 경로 해석 → 크로스 플랫폼 호환.
+        npm_exe = shutil.which("npm")
+        if not npm_exe:
+            print("  ERROR: npm을 찾을 수 없습니다 (PATH).")
+            sys.exit(1)
+
         with log_path.open("w", encoding="utf-8") as log_f:
             log_f.write(f"# build gate — {self._phase_name} @ {self._stamp()}\n")
-            for cmd in (["npm", "run", "lint"], ["npm", "run", "build"], ["npm", "run", "test"]):
+            for cmd in ([npm_exe, "run", "lint"], [npm_exe, "run", "build"], [npm_exe, "run", "test"]):
                 header = f"  → {' '.join(cmd)}"
                 print(header)
                 log_f.write(f"\n## {' '.join(cmd)}\n")
