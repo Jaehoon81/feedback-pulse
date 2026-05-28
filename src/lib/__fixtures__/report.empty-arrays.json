@@ -1,0 +1,44 @@
+{
+  "id": "e5f6a7b8-5678-4cde-8abc-fedcba987654",
+  "createdAt": "2026-05-28T05:30:00.000Z",
+  "video": {
+    "id": "abcdefghijk",
+    "title": "댓글 적은 영상",
+    "channelTitle": "스몰 채널",
+    "publishedAt": "2026-05-01T00:00:00.000Z",
+    "thumbnailUrl": "https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg",
+    "commentCount": 8,
+    "viewCount": 50,
+    "likeCount": 3
+  },
+  "commentCount": 8,
+  "executiveSummary": "댓글 수가 적어 패턴 추출이 어려웠습니다. 일부 시청자의 긍정 반응이 보입니다.",
+  "sentiment": {
+    "positive": 0.4,
+    "neutral": 0.5,
+    "negative": 0.1
+  },
+  "topics": [],
+  "strengths": [],
+  "improvements": [],
+  "notableComments": [
+    {
+      "commentIndex": 0,
+      "text": "잘 봤어요",
+      "author": "viewer1",
+      "reason": "짧지만 긍정"
+    },
+    {
+      "commentIndex": 3,
+      "text": "다음 영상도 기다릴게요",
+      "author": "viewer2",
+      "reason": "후속 콘텐츠 기대"
+    },
+    {
+      "commentIndex": 5,
+      "text": "음 그럭저럭",
+      "author": "viewer3",
+      "reason": "중립 반응 대표"
+    }
+  ]
+}

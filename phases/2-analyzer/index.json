@@ -24,10 +24,13 @@
     {
       "step": 2,
       "name": "markdown-tests",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [
         1
-      ]
+      ],
+      "started_at": "2026-05-28T13:56:55+0900",
+      "completed_at": "2026-05-28T14:00:36+0900",
+      "summary": "markdown.test.ts 14 케이스(6절 헤더/순서/% 표기/FeedbackItem 인용/author 옵셔널/빈 배열/3·6개 경계/특수문자) + 픽스처 2종(full, empty-arrays). 구현 부재로 fail(의도), 기존 52건 통과."
     },
     {
       "step": 3,
