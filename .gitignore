@@ -38,6 +38,7 @@ playwright-report/
 test-results/
 .artifacts/*
 !.artifacts/.gitkeep
+.playwright-mcp/
 
 # ─────────────────────────────────────────────────────────────
 # python (하네스 scripts/)
