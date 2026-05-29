@@ -94,7 +94,7 @@ src/
   - 환경변수: `YOUTUBE_API_KEY`
 - **Google Gemini API**
   - `@google/genai` 패키지 (`GoogleGenAI` 클래스)
-  - 모델: `gemini-2.5-pro` (ADR-011)
+  - 모델: `gemini-2.5-flash` (ADR-011)
   - `responseMimeType: 'application/json'` + `responseSchema`로 구조화된 JSON 응답 강제
   - 환경변수: `GEMINI_API_KEY`
   - Fallback (한국어 품질 부족 시): `@anthropic-ai/sdk` + `claude-sonnet-4-6` + tool_use, env `ANTHROPIC_API_KEY`
@@ -189,7 +189,7 @@ src/
 ### Google Gemini API
 
 - **SDK**: `@google/genai`의 `GoogleGenAI` 클래스 (Route Handler에서만 import)
-- **Endpoint** (SDK 내부 호출): `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent`
+- **Endpoint** (SDK 내부 호출): `POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`
 - **Headers** (SDK가 자동 설정):
   - `x-goog-api-key: {GEMINI_API_KEY}` (또는 `?key=` 쿼리 파라미터)
   - `Content-Type: application/json`
@@ -199,7 +199,7 @@ src/
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   ```
 - **Request 핵심 필드** (`ai.models.generateContent({...})`):
-  - `model`: `"gemini-2.5-pro"` (ADR-011)
+  - `model`: `"gemini-2.5-flash"` (ADR-011)
   - `contents`: `[{ role: "user", parts: [{ text: <시스템 프롬프트 + 사용자 메시지> }] }]`
     - Gemini는 `system` 필드가 별도 있음(`systemInstruction`) — 시스템 프롬프트는 이쪽에 분리
   - `config`:

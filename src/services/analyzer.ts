@@ -2,7 +2,7 @@
  * Gemini 분석 래퍼.
  *
  * - `GoogleGenAI` 클라이언트를 인자 주입형으로 받아 환경변수 격리 + 테스트 모킹을 동시 달성 (ADR services 주입형).
- * - 모델 ID `gemini-2.5-pro` literal (ADR-011 — 모델 교체는 코드 변경 + ADR 갱신을 동반).
+ * - 모델 ID `gemini-2.5-flash` literal (ADR-011 — 모델 교체는 코드 변경 + ADR 갱신을 동반).
  * - `responseMimeType: application/json` + `responseSchema`로 구조화 응답 강제 후 Zod로 한 번 더 재검증 (ADR-013).
  *   Gemini는 OpenAPI 3.0 부분집합만 지원해 max/minItems 등을 매번 강제하지 않으므로 Zod가 안전망.
  * - 모든 실패 경로(SDK throw / 빈 응답 / JSON 파싱 실패 / Zod 위반 / commentIndex 범위 초과 / 35s 타임아웃)는
@@ -20,7 +20,7 @@ import type { Comment, VideoMetadata } from '@/types/youtube';
 
 import { GeminiPayloadSchema } from './analyzer.schema';
 
-export const MODEL_ID = 'gemini-2.5-pro';
+export const MODEL_ID = 'gemini-2.5-flash';
 const ANALYSIS_TIMEOUT_MS = 35_000;
 const RETRY_RATE_LIMIT_DELAY_MS = 2_000;
 const RATE_LIMIT_PATTERN = /\b(?:429|503|rate.?limit|overload|exceeded)\b/i;

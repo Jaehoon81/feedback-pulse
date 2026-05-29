@@ -55,8 +55,11 @@ MVP 속도 최우선. 외부 의존성 최소화. 작동하는 최소 구현을 
 **이유**: 1인 도구에서 동시 분석은 실용적 의미가 없다. `AbortController`로 fetch를 일괄 중단하면 클라이언트 메모리/네트워크 절약. UI도 단순(단일 진행 표시).
 **트레이드오프**: 사용자가 영상 2개를 동시에 분석하려면 한 번에 하나씩 직렬로 해야 함. 큐 UI(대기열) 같은 다중 진행 UX는 불가능.
 
-### ADR-011: LLM 1차 채택 Gemini 2.5 Pro (무료), 한국어 품질 부족 시 Claude Sonnet 4.6 fallback
-**결정**: 1차 LLM은 **Google Gemini 2.5 Pro** (`@google/genai` SDK, 모델 ID `gemini-2.5-pro`)를 사용한다. 무료 티어(2026년 5월 기준: 100 RPD / 5 RPM / 250K TPM, 신용카드 불필요) 안에서 1인 크리에이터 도구의 예상 사용량(하루 5~20회 분석)을 충분히 커버한다. 한국어 비꼼·반어·맥락 의존 표현 인식이 부족하다고 검증되면 fallback으로 **Anthropic Claude Sonnet 4.6** (`@anthropic-ai/sdk`, 모델 ID `claude-sonnet-4-6`, 호출당 ~$0.020 유료)로 마이그레이션한다. 추상화 레이어/공급자 분기는 두지 않고 (ADR 철학 "외부 의존성 최소화"), `services/analyzer.ts` 단일 파일을 통째로 교체하는 단순 전환.
+### ADR-011: LLM 1차 채택 Gemini 2.5 Flash (무료), 한국어 품질 부족 시 Claude Sonnet 4.6 fallback
+**결정**: 1차 LLM은 **Google Gemini 2.5 Flash** (`@google/genai` SDK, 모델 ID `gemini-2.5-flash`)를 사용한다. 무료 티어(2026년 5월 기준: 250 RPD / 10 RPM / 250K TPM, 신용카드 불필요) 안에서 1인 크리에이터 도구의 예상 사용량(하루 5~20회 분석)을 충분히 커버한다. 한국어 비꼼·반어·맥락 의존 표현 인식이 부족하다고 검증되면 fallback으로 **Anthropic Claude Sonnet 4.6** (`@anthropic-ai/sdk`, 모델 ID `claude-sonnet-4-6`, 호출당 ~$0.020 유료)로 마이그레이션한다. 추상화 레이어/공급자 분기는 두지 않고 (ADR 철학 "외부 의존성 최소화"), `services/analyzer.ts` 단일 파일을 통째로 교체하는 단순 전환.
+
+> **결정 변경 (2026-05-29)**: 1차 모델을 `gemini-2.5-pro` → **`gemini-2.5-flash`** 로 교체.
+> **이유**: 실제 운영 검증 결과 gemini-2.5-pro는 **무료 티어에서 `GenerateContentInputTokensPerModelPerDay-FreeTier` 한도가 0** (에러 응답 `limit: 0, model: gemini-2.5-pro`)으로, 댓글 200개 + system instruction의 input token이 첫 요청부터 즉시 `429 RESOURCE_EXHAUSTED`를 유발해 **단 1회 분석도 불가**했다. Google이 2.5-pro를 무료 티어에서 사실상 제외하고 flash로 유도하는 정책(참고: gemini-cli discussion #2436)으로 전환한 것으로 확인. flash는 무료 티어에서 정상 동작(250 RPD / 10 RPM)하며 댓글 분석 수준의 한국어 품질도 실용적. 응답 속도도 pro보다 빨라 35초 타임아웃(ADR-007) 마진이 개선된다. 변경 범위: `services/analyzer.ts` MODEL_ID 1줄 + `ReportView` 영상카드 모델 표기 + 관련 테스트/문서. fallback(Claude Sonnet 4.6) 전략은 그대로 유효 — flash 한국어 품질이 부족하다고 검증되면 발동.
 **이유**: (1) MVP 비용 $0 유지가 1인 도구 정체성에 부합. (2) Gemini는 Google 검색 데이터로 학습되어 한국어 처리량이 풍부, 댓글 분석 수준에선 실용적. (3) 결제 정보 등록 없이 즉시 개발/검증 가능. (4) 마이그레이션 비용이 낮음 — services/analyzer.ts 1개 파일이 LLM 호출 경계라 SDK·프롬프트·응답 매핑만 교체. (5) Zod 응답 검증은 모델 무관하게 동일 — 안전망 그대로. Haiku 4.5 / Gemini 2.5 Flash·Flash-Lite는 비용/속도 우위이나 한국어 미묘 표현 품질에서 손해 → 후보에서 제외.
 **트레이드오프**: (1) Gemini 무료 한도 5 RPM은 동시 다발 분석 불가 (1인 사용엔 무관). (2) 두 API의 호출 인터페이스 차이(`responseSchema` vs `tool_use`)로 마이그레이션 시 약 1~2시간 작업. (3) 한국어 품질이 실제로 부족한지 검증 비용 필요 — Gemini로 한 영상 분석 후 동일 댓글로 Claude 1회 비교 (~$0.020). (4) 사용량이 100 RPD를 초과하면 Gemini 유료 결제 또는 Claude 전환 필요.
 

@@ -63,22 +63,22 @@
 
 - **배포 환경**: **Vercel Hobby (Free) 플랜** — Function `maxDuration` **60초**, 100k invocations/일, 100GB bandwidth/월, 6,000 build-min/월 (ADR-026)
 - **YouTube Data API v3 일일 쿼터**: 10,000 units. 영상 1건당 `videos.list`(1 unit) + `commentThreads.list`(페이지당 1, 최대 2) ≈ **3 units** → 일 약 3,300 영상 분석 한도
-- **Gemini API 비용**: 무료 티어 내 동작 — Gemini 2.5 Pro 100 RPD / 5 RPM (ADR-011). 1인 사용량(하루 5~20회) 안에 충분. 한국어 분석 품질 부족 시 Claude Sonnet 4.6 fallback (호출당 ~$0.020, 유료)
+- **Gemini API 비용**: 무료 티어 내 동작 — Gemini 2.5 Flash 250 RPD / 10 RPM (ADR-011 — 2026-05-29 pro→flash 변경, pro는 무료 티어 input token/day=0으로 사용 불가). 1인 사용량(하루 5~20회) 안에 충분. 한국어 분석 품질 부족 시 Claude Sonnet 4.6 fallback (호출당 ~$0.020, 유료)
 - **localStorage 용량**: 브라우저 한도 ≈ 5MB. 리포트당 평균 30KB 가정 → 약 170건 한도. 50건 정책은 안전 마진
 
 ## 비용 추정 (개발자용)
 
-기본 채택은 **Gemini 2.5 Pro 무료 티어** (ADR-011). 1차 LLM 비용은 $0 (무료 한도 100 RPD / 5 RPM 안에서). 한국어 비꼼/반어 인식 부족이 검증되면 Claude Sonnet 4.6 fallback. 아래 표는 비교용으로 두 모델 모두 표기.
+기본 채택은 **Gemini 2.5 Flash 무료 티어** (ADR-011 — 2026-05-29 pro→flash 변경). 1차 LLM 비용은 $0 (무료 한도 250 RPD / 10 RPM 안에서). 한국어 비꼼/반어 인식 부족이 검증되면 Claude Sonnet 4.6 fallback. 아래 표는 비교용으로 두 모델 모두 표기.
 
 기준: 한국어 댓글 평균 50자(≈100 tokens), 시스템 프롬프트 + 메타데이터 + `responseSchema` ≈ 3K 고정 토큰. Claude Sonnet 4.6 가격 가정($3/1M 입력, $15/1M 출력).
 
-| 댓글 수 | 입력 토큰 (추정) | 출력 토큰 (추정) | Gemini 2.5 Pro 비용 | Claude Sonnet 4.6 비용 (fallback) | YouTube 쿼터 (units) |
+| 댓글 수 | 입력 토큰 (추정) | 출력 토큰 (추정) | Gemini 2.5 Flash 비용 | Claude Sonnet 4.6 비용 (fallback) | YouTube 쿼터 (units) |
 |---|---|---|---|---|---|
 | 50 | ~5K | ~1.5K | **$0** (무료) | ~$0.005 | 2 (`videos`+1페이지) |
 | 100 | ~10K | ~1.8K | **$0** (무료) | ~$0.010 | 2 |
 | **200 (MVP 상한)** | ~20K | ~2K | **$0** (무료) | ~$0.020 | 3 (1 + 2페이지) |
 
-- 일일 한도: YouTube 10,000 units → 약 3,300 영상(200개 댓글 기준). Gemini 100 RPD → 100 분석/일.
+- 일일 한도: YouTube 10,000 units → 약 3,300 영상(200개 댓글 기준). Gemini 2.5 Flash 250 RPD → 250 분석/일.
 - 댓글이 더 적은 영상은 비용/토큰도 낮아짐 (페이지네이션 조기 종료).
 - 향후 Vercel Pro 업그레이드 시 댓글 500개까지 확장 가능 (ADR-004 트레이드오프).
 - Gemini 무료 한도 초과 시 동일 API 키로 결제 등록(Pay-as-you-go)하거나 Claude로 마이그레이션.
@@ -223,7 +223,7 @@
 
 ## 사용자 신뢰감
 
-- 리포트 상단 영상 카드에 분석 메타 명시: **"댓글 N개 분석 · {createdAt 상대시간 '몇 분 전' / '어제' / '3일 전'} · Gemini 2.5 Pro"** (ADR-011 — Claude fallback 시 모델명 동적 표시)
+- 리포트 상단 영상 카드에 분석 메타 명시: **"댓글 N개 분석 · {createdAt 상대시간 '몇 분 전' / '어제' / '3일 전'} · Gemini 2.5 Flash"** (ADR-011 — Claude fallback 시 모델명 동적 표시)
 - 사이드바 footer 또는 페이지 하단 1줄 안내: **"분석 결과는 이 기기의 브라우저에만 저장됩니다."**
 - 분석 진행 중 표시되는 "메타데이터 수집 중 / 댓글 N/200개 수집 중 / 분석 중"도 진행 상황의 투명성을 제공
 

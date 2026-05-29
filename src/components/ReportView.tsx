@@ -142,7 +142,7 @@ export function ReportView({ report }: ReportViewProps): JSX.Element {
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
             댓글 {report.commentCount.toLocaleString('ko-KR')}개 분석
             {' · '}{relativeTime(report.createdAt)}
-            {' · '}Gemini 2.5 Pro
+            {' · '}Gemini 2.5 Flash
           </p>
         </div>
       </header>

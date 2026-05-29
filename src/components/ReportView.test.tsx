@@ -55,7 +55,7 @@ describe('ReportView', () => {
     expect(screen.getByRole('heading', { level: 1, name: '예시 영상 제목' })).toBeInTheDocument();
     expect(screen.getByText('예시 채널')).toBeInTheDocument();
     expect(screen.getByText(/댓글 200개 분석/)).toBeInTheDocument();
-    expect(screen.getByText(/Gemini 2.5 Pro/)).toBeInTheDocument();
+    expect(screen.getByText(/Gemini 2.5 Flash/)).toBeInTheDocument();
 
     // 6개 절 헤더
     expect(screen.getByRole('heading', { level: 2, name: '핵심 요약' })).toBeInTheDocument();
