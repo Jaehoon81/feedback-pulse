@@ -47,7 +47,7 @@ export function HistorySidebar({ onSelect, activeId }: HistorySidebarProps): JSX
       className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-[#141414]"
     >
       <h2 className="text-sm font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        분석 기록 <span className="ml-1 text-xs normal-case tracking-normal text-neutral-400">(최대 50건)</span>
+        분석 기록 <span className="ml-1 text-xs normal-case tracking-normal">(최대 50건)</span>
       </h2>
 
       {entries.length === 0 ? (
