@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, type JSX } from 'react';
+import Image from 'next/image';
 
 import { NotableComments } from './NotableComments';
 import { SentimentBar } from './SentimentBar';
@@ -122,10 +123,12 @@ export function ReportView({ report }: ReportViewProps): JSX.Element {
   return (
     <article className="flex flex-col gap-8">
       <header className="flex flex-col gap-3 rounded-lg border border-neutral-200 bg-white p-4 sm:flex-row sm:items-start sm:gap-4 dark:border-neutral-800 dark:bg-[#141414]">
-        {/* eslint-disable-next-line @next/next/no-img-element -- 외부 호스트(i.ytimg.com) 정적 카드 컨텍스트, next/image 도입은 next.config remotePatterns 분리 작업으로 미룸 */}
-        <img
+        <Image
           src={video.thumbnailUrl}
           alt=""
+          width={480}
+          height={360}
+          priority
           className="h-auto w-full max-w-[240px] rounded-md object-cover sm:w-40"
         />
         <div className="flex flex-1 flex-col gap-1">

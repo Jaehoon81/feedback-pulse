@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState, type JSX } from 'react';
+import Image from 'next/image';
 
 import {
   createStorage,
@@ -72,10 +73,11 @@ export function HistorySidebar({ onSelect, activeId }: HistorySidebarProps): JSX
                       : 'border-neutral-200 hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900'
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- next/image 마이그레이션은 후속 묶음 K에서 일괄 */}
-                  <img
+                  <Image
                     src={e.thumbnailUrl}
                     alt=""
+                    width={80}
+                    height={48}
                     className="h-12 w-20 flex-shrink-0 rounded-md bg-neutral-200 object-cover dark:bg-neutral-800"
                   />
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
