@@ -11,7 +11,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import type { GoogleGenAI } from '@google/genai';
 
-import { AnalysisFailedError } from '@/lib/errors';
+import { AnalysisFailedError, QuotaExceededError } from '@/lib/errors';
 import { analyzeComments } from '@/services/analyzer';
 import { GeminiPayloadSchema } from '@/services/analyzer.schema';
 import type { Comment, VideoMetadata } from '@/types/youtube';
@@ -264,6 +264,30 @@ describe('analyzeComments — SDK 에러는 AnalysisFailedError로 wrap', () => 
     await expect(
       analyzeComments(client, FAKE_VIDEO, makeComments(10)),
     ).rejects.toBeInstanceOf(AnalysisFailedError);
+  });
+
+  it('Gemini 429 RESOURCE_EXHAUSTED 두 번 → QuotaExceededError로 분기 (ARCH L693)', async () => {
+    // 무료 티어 일일 quota 초과 응답 패턴.
+    // RATE_LIMIT_PATTERN 매칭 → 2초 대기 후 1회 재시도 → 동일 에러 → toUserFacing이 QUOTA_EXHAUSTED_PATTERN 매칭으로 QuotaExceededError 매핑.
+    vi.useFakeTimers();
+    const err = new Error(
+      'got status: 429 Too Many Requests. {"error":{"code":429,"message":"You exceeded your current quota","status":"RESOURCE_EXHAUSTED"}}',
+    );
+    const client = makeRejectingClient(err);
+    const promise = analyzeComments(client, FAKE_VIDEO, makeComments(10));
+    const assertion = expect(promise).rejects.toBeInstanceOf(QuotaExceededError);
+    await vi.advanceTimersByTimeAsync(3_000);
+    await assertion;
+  });
+
+  it('Gemini 503 overloaded 두 번 → AnalysisFailedError (사용자 친화 message 유지)', async () => {
+    vi.useFakeTimers();
+    const err = new Error('Gemini API: 503 model overloaded');
+    const client = makeRejectingClient(err);
+    const promise = analyzeComments(client, FAKE_VIDEO, makeComments(10));
+    const assertion = expect(promise).rejects.toBeInstanceOf(AnalysisFailedError);
+    await vi.advanceTimersByTimeAsync(3_000);
+    await assertion;
   });
 
   it('빈 응답 (response.text === "") → AnalysisFailedError', async () => {

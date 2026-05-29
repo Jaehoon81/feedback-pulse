@@ -108,7 +108,8 @@
 - [ ] 비공개/삭제 영상 → `VideoNotFoundError`
 - [ ] 잘못된 URL (구글 검색 등) → `InvalidUrlError` (서버 호출 없이 즉시)
 - [ ] 채널/재생목록 URL → `InvalidUrlError`
-- [ ] Gemini 429 (실제 quota 차단 시) → `QuotaExceededError` 또는 `AnalysisFailedError`
+- [ ] Gemini 429 `RESOURCE_EXHAUSTED` (일일 quota) → `QuotaExceededError` ("오늘의 분석 한도 초과" 카드)
+- [ ] Gemini 503 overloaded → `AnalysisFailedError` (2초 대기 후 1회 재시도, 그래도 실패 시)
 
 ## 변경 시 본 문서 갱신
 

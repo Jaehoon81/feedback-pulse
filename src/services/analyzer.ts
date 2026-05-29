@@ -14,7 +14,7 @@ import { randomUUID } from 'node:crypto';
 
 import { GoogleGenAI, Type } from '@google/genai';
 
-import { AnalysisFailedError } from '@/lib/errors';
+import { AnalysisFailedError, QuotaExceededError } from '@/lib/errors';
 import type { Report } from '@/types/report';
 import type { Comment, VideoMetadata } from '@/types/youtube';
 
@@ -24,6 +24,9 @@ export const MODEL_ID = 'gemini-2.5-pro';
 const ANALYSIS_TIMEOUT_MS = 35_000;
 const RETRY_RATE_LIMIT_DELAY_MS = 2_000;
 const RATE_LIMIT_PATTERN = /\b(?:429|503|rate.?limit|overload|exceeded)\b/i;
+// ARCH L693: Gemini 429 RESOURCE_EXHAUSTED(일일 quota)는 QuotaExceededError로 분기.
+// 503 overload / 기타 SDK 에러는 AnalysisFailedError 유지.
+const QUOTA_EXHAUSTED_PATTERN = /RESOURCE_EXHAUSTED|exceeded your current quota/i;
 const ZOD_VIOLATION_MARKER = 'Gemini 응답 스키마 검증 실패';
 
 const SYSTEM_INSTRUCTION = [
@@ -133,20 +136,48 @@ export async function analyzeComments(
 
   // ARCH L233-234 재시도 정책: 429/503은 2초 대기 후 1회, Zod 위반은 즉시 1회.
   // 두 경로는 상호 배타적이고 합쳐 최대 1회만 추가 호출.
+  // 모든 최종 throw는 toUserFacing으로 정규화 → raw SDK message가 사용자에게 노출되지 않음.
   try {
     return await runAnalysis(client, video, comments, prompt);
   } catch (firstErr) {
     if (!(firstErr instanceof AnalysisFailedError)) throw firstErr;
     const isRateLimit = RATE_LIMIT_PATTERN.test(firstErr.message);
     const isZodViolation = firstErr.message.includes(ZOD_VIOLATION_MARKER);
-    if (!isRateLimit && !isZodViolation) throw firstErr;
+    if (!isRateLimit && !isZodViolation) throw toUserFacing(firstErr);
     if (isRateLimit) {
       await new Promise((resolve) =>
         setTimeout(resolve, RETRY_RATE_LIMIT_DELAY_MS),
       );
     }
-    return await runAnalysis(client, video, comments, prompt);
+    try {
+      return await runAnalysis(client, video, comments, prompt);
+    } catch (secondErr) {
+      if (!(secondErr instanceof AnalysisFailedError)) throw secondErr;
+      throw toUserFacing(secondErr);
+    }
   }
+}
+
+/**
+ * 내부 SDK / Zod / JSON 파싱 등 raw error 메시지를 사용자 노출용 도메인 에러로 정규화.
+ * - Gemini 429 RESOURCE_EXHAUSTED(일일 quota) → QuotaExceededError (ARCH L693).
+ * - 그 외 → AnalysisFailedError + 사용자 친화 message.
+ * - 원본 SDK error는 cause로 보존(서버 로그용, 클라이언트 응답 본문에는 미포함).
+ */
+function toUserFacing(
+  err: AnalysisFailedError,
+): QuotaExceededError | AnalysisFailedError {
+  const cause = err.cause ?? err;
+  if (QUOTA_EXHAUSTED_PATTERN.test(err.message)) {
+    return new QuotaExceededError(
+      'Gemini 일일 분석 한도를 초과했습니다.',
+      cause,
+    );
+  }
+  return new AnalysisFailedError(
+    '분석 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+    cause,
+  );
 }
 
 async function runAnalysis(

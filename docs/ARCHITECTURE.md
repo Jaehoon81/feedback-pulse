@@ -690,7 +690,8 @@ try {
 
 | Gemini 응답 | 도메인 에러 |
 |--------------|------------|
-| 429 (rate limit) / 503 (overloaded), 재시도 후 실패 | `AnalysisFailedError` |
+| 429 `RESOURCE_EXHAUSTED` (일일 quota), 재시도 후 실패 | `QuotaExceededError` |
+| 503 (overloaded) / 기타 4xx·5xx, 재시도 후 실패 | `AnalysisFailedError` |
 | `finishReason !== "STOP"` (예: `MAX_TOKENS` / `SAFETY` / `RECITATION`) | `AnalysisFailedError` |
 | Zod 검증 실패 (재시도 후 실패) | `AnalysisFailedError` |
 | 400 invalid_argument | `AnalysisFailedError` (서버 로그 + 일반 메시지) |
