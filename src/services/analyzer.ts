@@ -37,6 +37,7 @@ const SYSTEM_INSTRUCTION = [
   '- 모든 분석 결과(요약·강점·개선점·주제명·주목 이유)는 한국어로 작성한다.',
   '- 의견·요청·칭찬·비판의 패턴을 식별한다.',
   '- 각 강점/개선점에는 반드시 인용 근거(`commentIndex`, 0-based)를 1개 이상 함께 제시한다.',
+  '- 배열 개수 제한을 반드시 지킨다: 주제(topics) 최대 8개, 강점(strengths)·개선점(improvements) 각각 최대 5개, 주목 댓글(notableComments) 3개 이상 6개 이하.',
   '- 인용 텍스트는 원문 그대로 옮긴다 (요약·번역·각색 금지).',
   '- 스팸·홍보·관련 없는 댓글은 분석에서 제외하되, 강한 패턴이 있으면 주목 댓글로 언급한다.',
   '- 다국어 댓글이 섞여 있어도 분석 결과는 한국어로 산출한다.',
@@ -82,6 +83,7 @@ const RESPONSE_SCHEMA = {
     },
     topics: {
       type: Type.ARRAY,
+      maxItems: '8',
       items: {
         type: Type.OBJECT,
         properties: {
@@ -97,14 +99,18 @@ const RESPONSE_SCHEMA = {
     },
     strengths: {
       type: Type.ARRAY,
+      maxItems: '5',
       items: FEEDBACK_ITEM_SCHEMA,
     },
     improvements: {
       type: Type.ARRAY,
+      maxItems: '5',
       items: FEEDBACK_ITEM_SCHEMA,
     },
     notableComments: {
       type: Type.ARRAY,
+      minItems: '3',
+      maxItems: '6',
       items: {
         type: Type.OBJECT,
         properties: {
@@ -196,6 +202,9 @@ async function runAnalysis(
           systemInstruction: SYSTEM_INSTRUCTION,
           responseMimeType: 'application/json',
           responseSchema: RESPONSE_SCHEMA,
+          // gemini-2.5-flash는 thinking이 기본 ON이라 댓글 200개 분석 시 35s 타임아웃을 초과한다.
+          // 댓글 감성/피드백 추출은 다단계 추론이 불필요하므로 thinking OFF로 지연·토큰 절감 (ADR-011).
+          thinkingConfig: { thinkingBudget: 0 },
         },
       }),
       ANALYSIS_TIMEOUT_MS,
