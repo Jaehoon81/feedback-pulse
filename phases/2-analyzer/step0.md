@@ -5,7 +5,7 @@
 - `/CLAUDE.md` — `src/services/` 책임, CRITICAL 규칙
 - `/docs/ARCHITECTURE.md` — 특히 L237~297 "타입 정의 전체", L299~340 "Gemini 프롬프트 명세", responseSchema, Zod 재검증
 - `/docs/PRD.md` — Gemini 응답 6항목 magic number (sentiment 합 1.0±0.05, topics ≤ 8, strengths ≤ 5 등)
-- `/docs/ADR.md` — ADR-002(단일 LLM 호출), ADR-011(@google/genai + gemini-2.5-pro), ADR-013(Zod 재검증), ADR-018(스트리밍 미사용)
+- `/docs/ADR.md` — ADR-002(단일 LLM 호출), ADR-011(@google/genai + gemini-2.5-flash), ADR-013(Zod 재검증), ADR-018(스트리밍 미사용)
 - `/src/types/report.ts` — Phase 0 산출물. `Sentiment` (union), `TopicTag`, `FeedbackItem`, `NotableComment` (text 포함), `Report` (id/createdAt/video/commentCount/6항목)
 - `/src/types/youtube.ts` — `VideoMetadata` (likeCount 포함), `Comment`
 - `/src/lib/errors.ts` — `AnalysisFailedError` (`AppError` 베이스 상속, `httpStatus: 503`)

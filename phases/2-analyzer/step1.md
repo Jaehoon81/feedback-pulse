@@ -7,7 +7,7 @@
 - `/src/types/report.ts` — `Report`, `Sentiment` (union), `TopicTag`, `FeedbackItem`, `NotableComment`
 - `/src/types/youtube.ts` — `VideoMetadata`, `Comment`
 - `/src/lib/errors.ts` — `AnalysisFailedError`
-- `/docs/ADR.md` — ADR-011(`@google/genai` + `gemini-2.5-pro`), ADR-013(Zod 재검증), ADR-018(스트리밍 미사용)
+- `/docs/ADR.md` — ADR-011(`@google/genai` + `gemini-2.5-flash`), ADR-013(Zod 재검증), ADR-018(스트리밍 미사용)
 - `/docs/ARCHITECTURE.md` — L237~297(타입 정의), L299~340(Gemini 프롬프트 명세 + responseSchema + systemInstruction)
 
 본 step은 step 0 테스트를 통과시키는 구현만 작성한다.
@@ -23,7 +23,7 @@
    import { AnalysisFailedError } from '@/lib/errors';
    import { GeminiPayloadSchema } from './analyzer.schema';
 
-   const MODEL_ID = 'gemini-2.5-pro';
+   const MODEL_ID = 'gemini-2.5-flash';
    const ANALYSIS_TIMEOUT_MS = 35_000;
 
    // Gemini responseSchema (OpenAPI 3.0 부분집합). ARCH L342~ 명세와 일치.
@@ -169,7 +169,7 @@ npm run lint
 - `npm run build` 통과 (`@google/genai` Type import 정상)
 - `npm run lint` 통과
 - `package.json` `dependencies`에 `@google/genai`, `zod` 명시
-- 모델 ID `gemini-2.5-pro` literal 1건 이상 (다른 모델 ID 사용 0건)
+- 모델 ID `gemini-2.5-flash` literal 1건 이상 (다른 모델 ID 사용 0건)
 - 반환된 `Report`의 `id`는 uuid v4 format
 - 반환된 `Report.commentCount` === `comments.length`
 - 반환된 `Report.video`는 인자로 받은 video 그대로
@@ -179,14 +179,14 @@ npm run lint
 1. 위 AC 커맨드 실행.
 2. 아키텍처 체크리스트:
    - `client: GoogleGenAI` 인자 주입형 (process.env 미참조)
-   - `MODEL_ID = 'gemini-2.5-pro'` literal 박힘
+   - `MODEL_ID = 'gemini-2.5-flash'` literal 박힘
    - `responseSchema` 6항목 ARCH L342~ 명세와 일치 (TopicTag name/count/sentiment, FeedbackItem point/evidence, NotableComment commentIndex/text/author?/reason)
    - Zod `GeminiPayloadSchema`가 sentiment 합 / topics ≤ 8 / strengths ≤ 5 / improvements ≤ 5 / notableComments 3~6 모두 강제
    - 35초 타임아웃 명시
    - `@anthropic-ai/sdk` import 0건
    - id/createdAt/video/commentCount 합성 후 Report 반환
 3. `phases/2-analyzer/index.json`의 step 1 업데이트:
-   - 성공 → `"status": "completed"`, `"summary": "services/analyzer.ts 구현 (gemini-2.5-pro + responseSchema + Zod 재검증 + id/createdAt 합성 + 35s 타임아웃), step 0 테스트 12+ 통과"`
+   - 성공 → `"status": "completed"`, `"summary": "services/analyzer.ts 구현 (gemini-2.5-flash + responseSchema + Zod 재검증 + id/createdAt 합성 + 35s 타임아웃), step 0 테스트 12+ 통과"`
 
 ## 금지사항
 

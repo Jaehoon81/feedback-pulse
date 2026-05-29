@@ -14,7 +14,7 @@ src/
 │   ├── UrlForm.tsx             # URL 입력 + onPaste 검증
 │   ├── ReportView.tsx          # 6항목 리포트 본문
 │   ├── ReportActions.tsx       # 다운로드 / 복사 액션 모음 (F-07 + F-08)
-│   ├── SentimentBar.tsx        # 감성 차트 (Recharts)
+│   ├── SentimentBar.tsx        # 감성 분포 가로 막대 (CSS, ADR-006 변경)
 │   ├── TopicTags.tsx           # 주제 뱃지 목록
 │   ├── NotableComments.tsx     # 주목 댓글 카드
 │   ├── HistorySidebar.tsx      # localStorage 히스토리

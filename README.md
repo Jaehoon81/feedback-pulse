@@ -29,7 +29,7 @@ cp .env.example .env.local
 `.env.local`에 두 API 키를 채운다:
 
 - `YOUTUBE_API_KEY` — [Google Cloud Console](https://console.cloud.google.com/apis/credentials)에서 발급. `YouTube Data API v3` 활성화 필요. 일일 쿼터 10,000 units (무료).
-- `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/app/apikey)에서 발급. 신용카드 불필요, 무료 티어 100 RPD / 5 RPM.
+- `GEMINI_API_KEY` — [Google AI Studio](https://aistudio.google.com/app/apikey)에서 발급. 신용카드 불필요, 무료 티어 250 RPD / 10 RPM (gemini-2.5-flash 기준, ADR-011).
 
 ### 3. 개발 서버 실행
 

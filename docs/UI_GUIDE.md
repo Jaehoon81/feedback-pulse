@@ -283,7 +283,7 @@ const pretendard = localFont({
     <svg aria-hidden="true" className="w-4 h-4" />
   </button>
   ```
-- 차트(Recharts)는 `aria-label`로 데이터 요약 제공 + 인접 영역에 텍스트 라벨 ("긍정 65% / 중립 25% / 부정 10%")
+- 감성 분포 막대(CSS, ADR-006 변경)는 `aria-label`로 데이터 요약 제공 + 인접 영역에 텍스트 라벨 ("긍정 65% / 중립 25% / 부정 10%")
 - 페이지 제목 헤더(`<h1>`, `<h2>`) 계층 일관성 유지 (skip하지 않음)
 
 ### 키보드 네비게이션
