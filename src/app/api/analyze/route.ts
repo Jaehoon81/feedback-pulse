@@ -55,6 +55,11 @@ export async function POST(request: Request): Promise<Response> {
     });
   } catch (err) {
     if (isAppError(err)) {
+      // 5xx(서버측 실패)는 원인 추적을 위해 cause까지 로깅 (ADR-008). 4xx는 사용자 귀책이라 생략.
+      // cause는 SDK raw 에러(endpoint/status/quota)만 담고 API 키는 포함하지 않음 (보안 규칙 준수).
+      if (err.httpStatus >= 500) {
+        console.error(`[analyze] ${err.code}: ${err.message}`, err.cause ?? '');
+      }
       return errorResponse(err.httpStatus, err.code, err.message);
     }
     console.error('[analyze] unexpected error', err);
@@ -67,7 +72,7 @@ export async function POST(request: Request): Promise<Response> {
 // httpStatus + code + message 시그니처 일치만 본다 (ARCH L99~ "AppError 베이스 일괄 catch").
 function isAppError(
   err: unknown,
-): err is { httpStatus: number; code: string; message: string } {
+): err is { httpStatus: number; code: string; message: string; cause?: unknown } {
   if (err === null || typeof err !== 'object') return false;
   const e = err as { httpStatus?: unknown; code?: unknown; message?: unknown };
   return (
